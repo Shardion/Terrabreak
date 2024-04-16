@@ -19,7 +19,7 @@ Features come in many shapes and forms, but they all interface with Discord in s
 by adding application commands or handling gateway events.
 
 The third element of Terrabreak, options, comprise its configuration system.
-There are two types of options: static, and dynamc. While their interfaces are (currently)
+There are two types of options: static, and dynamic. While their interfaces are (currently)
 the same, they imply two very different things.
 
 Static options are permanent—they can never be viewed or modified by users, and bot code is
