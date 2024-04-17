@@ -1,6 +1,10 @@
+using System;
+using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Serilog;
+using Serilog.Events;
 using Shardion.Terrabreak.Services.Identity;
 using Shardion.Terrabreak.Services.Options;
 
@@ -12,15 +16,13 @@ namespace Shardion.Terrabreak.Services.Discord
 
         private readonly DiscordManagerOptions _discordOptions;
         private readonly OptionsManager _options;
-        private readonly IServiceProvider _services;
 
         private System.Timers.Timer? _statusTimer;
 
-        public DiscordManager(OptionsManager options, DiscordManagerOptions discordOptions, IServiceProvider services)
+        public DiscordManager(OptionsManager options, DiscordManagerOptions discordOptions)
         {
             _discordOptions = discordOptions;
             _options = options;
-            _services = services;
 
             DiscordSocketConfig config = new()
             {
@@ -28,6 +30,7 @@ namespace Shardion.Terrabreak.Services.Discord
             };
 
             Client = new(config);
+            Client.Log += LogAsync;
             Client.Ready += async () =>
             {
                 await RotateStatus(false);
@@ -62,6 +65,22 @@ namespace Shardion.Terrabreak.Services.Discord
                 _statusTimer.Elapsed += async (_, _) => await RotateStatus(true);
                 _statusTimer.Start();
             }
+        }
+
+        private static async Task LogAsync(LogMessage message)
+        {
+            var severity = message.Severity switch
+            {
+                LogSeverity.Critical => LogEventLevel.Fatal,
+                LogSeverity.Error => LogEventLevel.Error,
+                LogSeverity.Warning => LogEventLevel.Warning,
+                LogSeverity.Info => LogEventLevel.Information,
+                LogSeverity.Verbose => LogEventLevel.Verbose,
+                LogSeverity.Debug => LogEventLevel.Debug,
+                _ => LogEventLevel.Information
+            };
+            Log.Write(severity, message.Exception, "[{Source}] {Message}", message.Source, message.Message);
+            await Task.CompletedTask;
         }
     }
 }

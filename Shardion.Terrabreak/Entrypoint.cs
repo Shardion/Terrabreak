@@ -7,6 +7,12 @@ using Discord;
 using Shardion.Terrabreak.Services.Options;
 using Shardion.Terrabreak.Services.Discord;
 using Shardion.Terrabreak.Services.Interactions;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 
 namespace Shardion.Terrabreak
 {
@@ -52,18 +58,33 @@ namespace Shardion.Terrabreak
                 builder.Services.AddSingleton(serviceType);
             }
 
+            foreach (Type serviceType in ReflectionHelper.GetAssignables<ITerrabreakFeature>())
+            {
+                builder.Services.AddSingleton(serviceType);
+            }
+
             using IHost host = builder.Build();
 
-            DiscordManager discord = host.Services.GetRequiredService<DiscordManager>();
-            InteractionManager interactions = host.Services.GetRequiredService<InteractionManager>();
-            discord.Client.Log += LogAsync;
+            List<Task> serviceTasks = [];
+            foreach (Type serviceType in ReflectionHelper.GetAssignables<ITerrabreakService>())
+            {
+                if (host.Services.GetService(serviceType) is ITerrabreakService service)
+                {
+                    serviceTasks.Add(service.StartAsync());
+                }
+            }
+            await Task.WhenAll(serviceTasks);
 
-            Task[] tasks =
-            [
-                discord.StartAsync(),
-                interactions.StartAsync(),
-            ];
-            await Task.WhenAll(tasks);
+            List<Task> featureTasks = [];
+            foreach (Type featureType in ReflectionHelper.GetAssignables<ITerrabreakFeature>())
+            {
+                if (host.Services.GetService(featureType) is ITerrabreakFeature feature)
+                {
+                    featureTasks.Add(feature.StartAsync());
+                }
+            }
+            await Task.WhenAll(featureTasks);
+
             await Task.Delay(Timeout.Infinite);
         }
 
@@ -89,22 +110,6 @@ namespace Shardion.Terrabreak
                 return Path.Join(home, ".config", "terrabreak", $"{filename}{extension}");
             }
             return Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "terrabreak", $"{filename}{extension}");
-        }
-
-        private static async Task LogAsync(LogMessage message)
-        {
-            var severity = message.Severity switch
-            {
-                LogSeverity.Critical => LogEventLevel.Fatal,
-                LogSeverity.Error => LogEventLevel.Error,
-                LogSeverity.Warning => LogEventLevel.Warning,
-                LogSeverity.Info => LogEventLevel.Information,
-                LogSeverity.Verbose => LogEventLevel.Verbose,
-                LogSeverity.Debug => LogEventLevel.Debug,
-                _ => LogEventLevel.Information
-            };
-            Log.Write(severity, message.Exception, "[{Source}] {Message}", message.Source, message.Message);
-            await Task.CompletedTask;
         }
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Discord.Interactions;
 using Shardion.Terrabreak.Services.Discord;
 

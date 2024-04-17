@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Security.Authentication;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Shardion.Terrabreak.Services.Options
@@ -11,17 +15,24 @@ namespace Shardion.Terrabreak.Services.Options
             _provider = provider;
         }
 
-        public TOptions? Get<TOptions>(ulong? userId = null, ulong? serverId = null) where TOptions : class, IDynamicOptions, new()
+        public TOptions Get<TOptions>(ulong? userId = null, ulong? serverId = null) where TOptions : class, IDynamicOptions
         {
-            TOptions options = GetInternal<TOptions>() ?? new();
-            if (Accessible(options.Permissions, userId, serverId))
+            TOptions? options = GetInternal<TOptions>();
+            if (options is null)
+            {
+                throw new InvalidOperationException($"There is no options of type {typeof(TOptions).Name}.");
+            }
+            else if (Accessible(options.Permissions, userId, serverId))
             {
                 return options;
             }
-            return null;
+            else
+            {
+                throw new NoAccessException();
+            }
         }
 
-        public IReadOnlyCollection<TOptions> GetMany<TOptions>(ulong? userId = null, ulong? serverId = null) where TOptions : IDynamicOptions
+        public IReadOnlyCollection<TOptions> GetMany<TOptions>(ulong? userId = null, ulong? serverId = null) where TOptions : class, IDynamicOptions
         {
             List<TOptions> gotOptions = [];
             foreach (Type type in ReflectionHelper.GetParameterlessConstructibleAssignables<TOptions>())
@@ -53,7 +64,7 @@ namespace Shardion.Terrabreak.Services.Options
             }
         }
 
-        private TOptions? GetInternal<TOptions>() where TOptions : IDynamicOptions, new()
+        private TOptions? GetInternal<TOptions>() where TOptions : class, IDynamicOptions
         {
             return _provider.GetService<TOptions>();
         }

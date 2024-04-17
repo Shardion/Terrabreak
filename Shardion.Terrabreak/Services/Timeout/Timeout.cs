@@ -1,3 +1,4 @@
+using System;
 using LiteDB;
 
 namespace Shardion.Terrabreak.Services.Timeout
@@ -11,5 +12,12 @@ namespace Shardion.Terrabreak.Services.Timeout
         public required BsonDocument Data { get; set; }
 
         public required DateTimeOffset ExpirationDate { get; set; }
+        public bool ExpiryProcessed { get; set; }
+
+        public bool IsNear()
+        {
+            TimeSpan timeBetweenNowAndExpiry = DateTimeOffset.UtcNow - ExpirationDate;
+            return timeBetweenNowAndExpiry.TotalMinutes <= 30;
+        }
     }
 }

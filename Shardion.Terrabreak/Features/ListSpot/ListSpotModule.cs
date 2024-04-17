@@ -1,6 +1,6 @@
+using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
-using Serilog;
 using Shardion.Terrabreak.Services.Identity;
 
 namespace Shardion.Terrabreak.Features.ListSpot

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Hosting;
+using System.Threading.Tasks;
 
 namespace Shardion.Terrabreak
 {
