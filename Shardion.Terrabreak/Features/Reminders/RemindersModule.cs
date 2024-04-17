@@ -36,8 +36,12 @@ namespace Shardion.Terrabreak.Features.Reminders
                 ["note"] = note,
                 ["startTime"] = DateTimeOffset.UtcNow.UtcDateTime,
                 ["uid"] = Context.User.Id.ToString(CultureInfo.InvariantCulture),
-                ["cid"] = Context.Channel.Id.ToString(CultureInfo.InvariantCulture),
             };
+
+            if (Context.Channel is not null)
+            {
+                timerInfo["cid"] = Context.Channel.Id.ToString(CultureInfo.InvariantCulture);
+            }
 
             Timeout timeout = new()
             {
@@ -49,6 +53,9 @@ namespace Shardion.Terrabreak.Features.Reminders
             _timeoutManager.BeginTimeout(timeout);
 
             await Context.Interaction.RespondAsync($"Reminder set for **<t:{offsettedTime.ToUnixTimeSeconds()}:F>**!\n> {note}");
+
+            Log.Error($"TEST DATA: {Context.Interaction.ContextType}");
+            // await Context.Interaction.RespondAsync("Test response.");
         }
     }
 }

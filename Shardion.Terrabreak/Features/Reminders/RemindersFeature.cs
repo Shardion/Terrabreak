@@ -139,22 +139,7 @@ namespace Shardion.Terrabreak.Features.Reminders
                         }
                         else
                         {
-                            RemindersOptions remindersOptions = _optionsManager.Get<RemindersOptions>(null, null);
-                            if (remindersOptions.FallbackChannelId is ulong fallbackChannelId)
-                            {
-                                if (await _discordManager.Client.GetChannelAsync(fallbackChannelId) is IMessageChannel validFallbackChannel)
-                                {
-                                    await validFallbackChannel.SendMessageAsync(messageContent, allowedMentions: messageMentions);
-                                }
-                                else
-                                {
-                                    Log.Error($"Dropped reminder {timeout.Id} as fallback channel was invalid!!! ", timeout.Id);
-                                }
-                            }
-                            else
-                            {
-                                Log.Error($"Dropped reminder {timeout.Id} as fallback channel was invalid!!! ", timeout.Id);
-                            }
+                            Log.Error($"Dropped reminder {timeout.Id} as fallback channel was invalid!!! ", timeout.Id);
                         }
                     }
                 }
