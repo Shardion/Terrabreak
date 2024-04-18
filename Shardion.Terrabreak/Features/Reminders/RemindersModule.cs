@@ -27,6 +27,7 @@ namespace Shardion.Terrabreak.Features.Reminders
             if (offset <= TimeSpan.Zero)
             {
                 await Context.Interaction.RespondAsync("Invalid time.", ephemeral: true);
+                return;
             }
 
             DateTimeOffset offsettedTime = DateTimeOffset.UtcNow.Add(offset);
