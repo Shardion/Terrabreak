@@ -5,39 +5,42 @@ using Discord.Interactions;
 using Serilog;
 using Shardion.Terrabreak.Services.Discord;
 using Shardion.Terrabreak.Services.Identity;
+using Shardion.Terrabreak.Services.Options;
 
 namespace Shardion.Terrabreak.Services.Interactions
 {
     public class InteractionManager : ITerrabreakService
     {
-        private readonly DiscordManager _discord;
+        private readonly DiscordManager _discordManager;
         private readonly InteractionService _interactions;
-        private readonly IdentityManager _identity;
+        private readonly IdentityManager _identityManager;
+        private readonly OptionsManager _optionsManager;
         private readonly IServiceProvider _services;
 
-        public InteractionManager(DiscordManager discord, IServiceProvider services, IdentityManager identity)
+        public InteractionManager(DiscordManager discordManager, IServiceProvider services, IdentityManager identityManager, OptionsManager optionsManager)
         {
-            _discord = discord;
+            _discordManager = discordManager;
             _services = services;
-            _identity = identity;
-            _interactions = new(_discord.Client);
-            _discord.Client.InteractionCreated += async (interaction) =>
+            _identityManager = identityManager;
+            _optionsManager = optionsManager;
+            _interactions = new(_discordManager.Client);
+            _discordManager.Client.InteractionCreated += async (interaction) =>
             {
-                SocketInteractionContext ctx = new(_discord.Client, interaction);
+                SocketInteractionContext ctx = new(_discordManager.Client, interaction);
                 try
                 {
                     await _interactions.ExecuteCommandAsync(ctx, _services);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Log.Error(e.ToString());
-                    EmbedBuilder errorEmbed = _identity.GetEmbedTemplate()
+                    string primaryDevSection = _optionsManager.Get<IdentityOptions>().PrimaryDeveloperID is ulong primaryDevId ? $"Please ping <@{primaryDevId}> for assistance." : "";
+                    EmbedBuilder errorEmbed = _identityManager.GetEmbedTemplate()
                         .WithTitle("Internal Error")
-                        .WithDescription("An internal error occurred and your command couldn't be executed to completion. Ping <@208129127494975488> for assistance.");
+                        .WithDescription($"An internal error occurred and your command couldn't be executed to completion. {primaryDevSection}");
                     await interaction.RespondAsync("", embed: errorEmbed.Build(), ephemeral: true);
                 }
             };
-            _discord.Client.Ready += async () =>
+            _discordManager.Client.Ready += async () =>
             {
                 await _interactions.AddModulesAsync(typeof(Entrypoint).Assembly, _services);
                 await _interactions.RegisterCommandsGloballyAsync();
