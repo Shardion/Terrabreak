@@ -49,12 +49,12 @@ namespace Shardion.Terrabreak.Services.Timeout
                     {
                         if (timeout.ExpirationDate < DateTimeOffset.UtcNow)
                         {
+                            timeout.ExpiryProcessed = true;
+                            DatabaseTimeouts.Collection.Update(timeout);
                             Task.Run(() =>
                             {
                                 TimeoutExpired?.Invoke(timeout);
                             });
-                            timeout.ExpiryProcessed = true;
-                            DatabaseTimeouts.Collection.Update(timeout);
                         }
                         else
                         {
@@ -102,7 +102,7 @@ namespace Shardion.Terrabreak.Services.Timeout
                 {
                     _ = MemoryTimeouts.TryRemove(pair);
                 }
-                DatabaseTimeouts.Collection.DeleteMany(timeout => timeout.ExpiryProcessed);
+                //DatabaseTimeouts.Collection.DeleteMany(timeout => timeout.ExpiryProcessed);
 
                 bool timerAdded = false;
 

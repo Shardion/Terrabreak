@@ -14,12 +14,15 @@ namespace Shardion.Terrabreak.Features.Reminders
         private readonly DiscordManager _discordManager;
         private readonly TimeoutManager _timeoutManager;
         private readonly OptionsManager _optionsManager;
+        private readonly TimeoutCollectionManager _databaseTimeouts;
 
-        public RemindersFeature(DiscordManager discordManager, TimeoutManager timeoutManager, OptionsManager optionsManager)
+        public RemindersFeature(DiscordManager discordManager, TimeoutManager timeoutManager, OptionsManager optionsManager, TimeoutCollectionManager databaseTimeouts)
         {
             _discordManager = discordManager;
             _timeoutManager = timeoutManager;
             _optionsManager = optionsManager;
+            _databaseTimeouts = databaseTimeouts;
+
             _timeoutManager.TimeoutExpired += async (timeout) =>
             {
                 try
@@ -145,7 +148,11 @@ namespace Shardion.Terrabreak.Features.Reminders
                 }
                 catch (Exception e)
                 {
+                    Log.Error($"Dropped reminder {timeout.Id} due to unhandled exception:");
                     Log.Error(e.ToString());
+
+                    timeout.ExpiryProcessed = false;
+                    _databaseTimeouts.Collection.Update(timeout);
                 }
             };
         }
