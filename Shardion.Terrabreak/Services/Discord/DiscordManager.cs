@@ -18,6 +18,7 @@ namespace Shardion.Terrabreak.Services.Discord
         private readonly OptionsManager _options;
 
         private System.Timers.Timer? _statusTimer;
+        private string? _lastSplash;
 
         public DiscordManager(OptionsManager options, DiscordManagerOptions discordOptions)
         {
@@ -26,7 +27,10 @@ namespace Shardion.Terrabreak.Services.Discord
 
             DiscordSocketConfig config = new()
             {
-                GatewayIntents = GatewayIntents.GuildPresences | GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.DirectMessages
+                GatewayIntents = GatewayIntents.GuildPresences | GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.DirectMessages,
+#if DEBUG
+                LogLevel = LogSeverity.Verbose,
+#endif
             };
 
             Client = new(config);
@@ -47,10 +51,14 @@ namespace Shardion.Terrabreak.Services.Discord
         {
             if (timerControlled || _statusTimer is null)
             {
-                if (_options.Get<IdentityOptions>() is IdentityOptions identity)
+                if (_options.Get<IdentityOptions>() is IdentityOptions identity && identity.Splashes is string[] splashes)
                 {
-                    string splash = identity.Splashes[Random.Shared.Next(identity.Splashes.Length)];
-                    await Client.SetCustomStatusAsync(splash);
+                    string splash = splashes[Random.Shared.Next(splashes.Length)];
+                    if (splash != _lastSplash)
+                    {
+                        _lastSplash = splash;
+                        await Client.SetCustomStatusAsync(splash);
+                    }
                 }
             }
 
@@ -67,7 +75,7 @@ namespace Shardion.Terrabreak.Services.Discord
             }
         }
 
-        private static async Task LogAsync(LogMessage message)
+        public static async Task LogAsync(LogMessage message)
         {
             var severity = message.Severity switch
             {
