@@ -27,6 +27,7 @@ namespace Shardion.Terrabreak.Features.SelfModeration
             if (minutes <= 0)
             {
                 await Context.Interaction.RespondAsync("Invalid time.", ephemeral: true);
+                return;
             }
 
             await Context.Interaction.DeferAsync(ephemeral: true);

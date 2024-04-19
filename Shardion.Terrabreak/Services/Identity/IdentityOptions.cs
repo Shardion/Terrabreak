@@ -15,10 +15,7 @@ namespace Shardion.Terrabreak.Services.Identity
         public string BotName { get; set; } = "Project Terrabreak";
         public uint BotColor { get; set; } = 0x1f1e33;
 
-        public string[] Splashes { get; set; } =
-        [
-            "Evolving, endlessly"
-        ];
+        public string[]? Splashes { get; set; } = null;
 
         public ulong? PrimaryDeveloperID { get; set; } = null;
         public ulong? PrimaryDevelopmentServerID { get; set; } = null;
