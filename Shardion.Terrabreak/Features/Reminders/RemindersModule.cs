@@ -39,7 +39,7 @@ namespace Shardion.Terrabreak.Features.Reminders
                 ["uid"] = Context.User.Id.ToString(CultureInfo.InvariantCulture),
             };
 
-            if (Context.Channel is not null)
+            if (Context.Channel is ITextChannel)
             {
                 timerInfo["cid"] = Context.Channel.Id.ToString(CultureInfo.InvariantCulture);
             }

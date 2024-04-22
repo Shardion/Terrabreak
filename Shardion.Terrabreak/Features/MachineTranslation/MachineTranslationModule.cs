@@ -27,7 +27,7 @@ namespace Shardion.Terrabreak.Features.MachineTranslation
         public async Task Translate(string message)
         {
             Task<ITranslationResult> resultTask = _machineTranslation.Translator.TranslateAsync(message, "en");
-            Task deferralTask = DeferAsync(ephemeral: true);
+            Task deferralTask = DeferAsync();
 
             ITranslationResult result = await resultTask;
 
@@ -39,7 +39,7 @@ namespace Shardion.Terrabreak.Features.MachineTranslation
             string finalTranslation = string.Join('\n', translationLines);
 
             await deferralTask;
-            await FollowupAsync($"Translated from {result.SourceLanguage.Name} to English.\n{finalTranslation}", ephemeral: true);
+            await FollowupAsync($"Translated from {result.SourceLanguage.Name} to English.\n{finalTranslation}");
         }
     }
 }
