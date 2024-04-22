@@ -15,14 +15,15 @@ namespace Shardion.Terrabreak.Services.Timeout
         private readonly ConcurrentDictionary<Guid, Timeout> MemoryTimeouts;
         private readonly TimeoutCollectionManager DatabaseTimeouts;
 
-        private CancellationTokenSource _tokenSource;
         private readonly Thread _timeoutExpiryThread;
         private readonly Thread _timeoutLoadingThread;
 
-        private readonly Mutex _timeoutThreadMutex;
-
         private Task? _expiryThreadSleepTask;
         private Task? _loadingThreadSleepTask;
+
+        private CancellationTokenSource _tokenSource;
+        private readonly Mutex _timeoutThreadMutex;
+
         private bool _disposed;
 
         public TimeoutManager(TimeoutCollectionManager databaseTimeouts)
@@ -154,20 +155,21 @@ namespace Shardion.Terrabreak.Services.Timeout
 
         public void Dispose()
         {
-            Dispose(true);
+            Dispose(disposingManagedObjects: true);
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposingManagedObjects)
         {
             if (_disposed)
             {
                 return;
             }
 
-            if (disposing)
+            if (disposingManagedObjects)
             {
                 _timeoutThreadMutex.Dispose();
+                _tokenSource.Dispose();
             }
 
             _disposed = true;
