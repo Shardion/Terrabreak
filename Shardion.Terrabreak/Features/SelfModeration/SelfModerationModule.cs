@@ -17,7 +17,7 @@ namespace Shardion.Terrabreak.Features.SelfModeration
         {
             if (Context.Channel is not ITextChannel textChannel)
             {
-                await Context.Interaction.RespondAsync("Cannot purge messages in non-text channel.\nP.S. Please tell a developer how you ran a slash command in a non-text channel!", ephemeral: true);
+                await RespondAsync("Cannot purge messages in non-text channel.\nP.S. Please tell a developer how you ran a slash command in a non-text channel!", ephemeral: true);
                 return;
             }
 
@@ -26,11 +26,11 @@ namespace Shardion.Terrabreak.Features.SelfModeration
 
             if (minutes <= 0)
             {
-                await Context.Interaction.RespondAsync("Invalid time.", ephemeral: true);
+                await RespondAsync("Invalid time.", ephemeral: true);
                 return;
             }
 
-            await Context.Interaction.DeferAsync(ephemeral: true);
+            await DeferAsync(ephemeral: true);
             await Parallel.ForEachAsync(messages, async (messageChunk, ct) =>
             {
                 await Parallel.ForEachAsync(messageChunk.Where((message) => message.Author.Id == Context.User.Id && (DateTime.UtcNow - message.CreatedAt).TotalMinutes <= minutes), (targetedMessage, innerCt) =>
@@ -41,7 +41,7 @@ namespace Shardion.Terrabreak.Features.SelfModeration
             });
 
             await textChannel.DeleteMessagesAsync(messagesToDelete);
-            await Context.Interaction.FollowupAsync($"{messagesToDelete.Count} messages deleted.");
+            await FollowupAsync($"{messagesToDelete.Count} messages deleted.");
         }
     }
 }

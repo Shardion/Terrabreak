@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Discord.Net" Version="3.14.1" />
+    <PackageReference Include="GTranslate" Version="2.1.6" />
     <PackageReference Include="LiteDB" Version="5.0.19" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0-preview.3.24172.9" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0-preview.3.24172.9" />

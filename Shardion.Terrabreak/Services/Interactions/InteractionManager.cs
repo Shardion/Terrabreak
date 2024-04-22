@@ -2,20 +2,22 @@ using System;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
-using Serilog;
 using Shardion.Terrabreak.Services.Discord;
 using Shardion.Terrabreak.Services.Identity;
 using Shardion.Terrabreak.Services.Options;
 
 namespace Shardion.Terrabreak.Services.Interactions
 {
-    public class InteractionManager : ITerrabreakService
+    public class InteractionManager : ITerrabreakService, IDisposable
     {
         private readonly DiscordManager _discordManager;
-        private readonly InteractionService _interactions;
         private readonly IdentityManager _identityManager;
         private readonly OptionsManager _optionsManager;
         private readonly IServiceProvider _services;
+
+        private readonly InteractionService _interactions;
+
+        private bool _disposed;
 
         public InteractionManager(DiscordManager discordManager, IServiceProvider services, IdentityManager identityManager, OptionsManager optionsManager)
         {
@@ -58,7 +60,14 @@ namespace Shardion.Terrabreak.Services.Interactions
                         .WithTitle("Internal Error")
                         .WithDescription($"An internal error occurred and your command couldn't be executed to completion.{primaryDevSection}")
                         .AddField("Error", $"**`{result.Error}`**: {result.ErrorReason}");
-                    await context.Interaction.RespondAsync("", embed: errorEmbed.Build(), ephemeral: true);
+                    if (!context.Interaction.HasResponded)
+                    {
+                        await context.Interaction.RespondAsync("", embed: errorEmbed.Build(), ephemeral: true);
+                    }
+                    else
+                    {
+                        await context.Interaction.FollowupAsync("", embed: errorEmbed.Build(), ephemeral: true);
+                    }
                 }
             };
 
@@ -74,6 +83,27 @@ namespace Shardion.Terrabreak.Services.Interactions
         public Task StartAsync()
         {
             return Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposingManagedObjects: true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposingManagedObjects)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            if (disposingManagedObjects)
+            {
+                _interactions.Dispose();
+            }
+
+            _disposed = true;
         }
     }
 }

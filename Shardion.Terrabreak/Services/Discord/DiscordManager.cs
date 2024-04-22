@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Interactions;
 using Discord.WebSocket;
 using Serilog;
 using Serilog.Events;
@@ -10,9 +9,10 @@ using Shardion.Terrabreak.Services.Options;
 
 namespace Shardion.Terrabreak.Services.Discord
 {
-    public class DiscordManager : ITerrabreakService
+    public class DiscordManager : ITerrabreakService, IDisposable, IAsyncDisposable
     {
-        public DiscordSocketClient Client { get; }
+        public DiscordSocketClient Client { get => _client ?? throw new ObjectDisposedException(typeof(DiscordSocketClient).FullName ?? typeof(DiscordSocketClient).Name); }
+        private DiscordSocketClient? _client;
 
         private readonly DiscordManagerOptions _discordOptions;
         private readonly OptionsManager _options;
@@ -33,7 +33,7 @@ namespace Shardion.Terrabreak.Services.Discord
 #endif
             };
 
-            Client = new(config);
+            _client = new(config);
             Client.Log += LogAsync;
             Client.Ready += async () =>
             {
@@ -89,6 +89,39 @@ namespace Shardion.Terrabreak.Services.Discord
             };
             Log.Write(severity, message.Exception, "[{Source}] {Message}", message.Source, message.Message);
             await Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposingManagedObjects: true);
+            GC.SuppressFinalize(this);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await DisposeAsyncCore().ConfigureAwait(false);
+
+            Dispose(disposingManagedObjects: false);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposingManagedObjects)
+        {
+            if (disposingManagedObjects)
+            {
+                _client?.Dispose();
+                _client = null;
+            }
+        }
+
+        protected virtual async ValueTask DisposeAsyncCore()
+        {
+            if (_client is not null)
+            {
+                await _client.DisposeAsync().ConfigureAwait(false);
+            }
+
+            _client = null;
         }
     }
 }
