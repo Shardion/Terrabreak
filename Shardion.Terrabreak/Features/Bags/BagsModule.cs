@@ -31,12 +31,12 @@ namespace Shardion.Terrabreak.Features.Bags
         {
             if (_bags.GetBag(Context.User.Id, name) is not null)
             {
-                await Context.Interaction.RespondAsync($"Bag **`{name}`** already exists!", ephemeral: true);
+                await RespondAsync($"Bag **`{name}`** already exists!", ephemeral: true);
                 return;
             }
 
             Bag bag = _bags.CreateBag(Context.User.Id, name);
-            await Context.Interaction.RespondAsync($"Bag **`{bag.Name}`** created.", ephemeral: true);
+            await RespondAsync($"Bag **`{bag.Name}`** created.", ephemeral: true);
         }
 
         [SlashCommand("add", "Adds an entry to a bag.")]
@@ -48,17 +48,17 @@ namespace Shardion.Terrabreak.Features.Bags
             Bag? bagSearchResult = _bags.GetBag(Context.User.Id, name);
             if (bagSearchResult is not Bag bag)
             {
-                await Context.Interaction.RespondAsync($"Bag **`{name}`** does not exist!", ephemeral: true);
+                await RespondAsync($"Bag **`{name}`** does not exist!", ephemeral: true);
                 return;
             }
 
             if (!_bags.AddToBag(bag, entry))
             {
-                await Context.Interaction.RespondAsync($"Failed to add to bag **`{bag.Name}`**!\n> {entry}", ephemeral: true);
+                await RespondAsync($"Failed to add to bag **`{bag.Name}`**!\n> {entry}", ephemeral: true);
                 return;
             }
 
-            await Context.Interaction.RespondAsync($"Added to bag **`{name}`**.\n> {entry}");
+            await RespondAsync($"Added to bag **`{name}`**.\n> {entry}");
         }
 
         [SlashCommand("take", "Displays a random entry from a bag, optionally removing it.")]
@@ -143,23 +143,23 @@ namespace Shardion.Terrabreak.Features.Bags
             Bag? bagSearchResult = _bags.GetBag(Context.User.Id, name);
             if (bagSearchResult is not Bag bag)
             {
-                await Context.Interaction.RespondAsync($"Bag **`{name}`** does not exist!", ephemeral: true);
+                await RespondAsync($"Bag **`{name}`** does not exist!", ephemeral: true);
                 return;
             }
 
             if (bag.Entries.Count > 0 && !force)
             {
-                await Context.Interaction.RespondAsync($"Bag **`{bag.Name}`** is not empty. Run this command again with `force:True` to delete **`{bag.Name}`**.", ephemeral: true);
+                await RespondAsync($"Bag **`{bag.Name}`** is not empty. Run this command again with `force:True` to delete **`{bag.Name}`**.", ephemeral: true);
                 return;
             }
 
             if (!_bags.DeleteBag(bag))
             {
-                await Context.Interaction.RespondAsync($"Failed to delete bag **`{bag.Name}`**!", ephemeral: true);
+                await RespondAsync($"Failed to delete bag **`{bag.Name}`**!", ephemeral: true);
                 return;
             }
 
-            await Context.Interaction.RespondAsync($"Bag **`{bag.Name}`** deleted.", ephemeral: true);
+            await RespondAsync($"Bag **`{bag.Name}`** deleted.", ephemeral: true);
         }
     }
 }

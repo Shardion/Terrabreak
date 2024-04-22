@@ -26,7 +26,7 @@ namespace Shardion.Terrabreak.Features.Reminders
             TimeSpan offset = new(days, hours, minutes, seconds);
             if (offset <= TimeSpan.Zero)
             {
-                await Context.Interaction.RespondAsync("Invalid time.", ephemeral: true);
+                await RespondAsync("Invalid time.", ephemeral: true);
                 return;
             }
 
@@ -53,7 +53,7 @@ namespace Shardion.Terrabreak.Features.Reminders
             };
             _timeoutManager.BeginTimeout(timeout);
 
-            await Context.Interaction.RespondAsync($"Reminder set for **<t:{offsettedTime.ToUnixTimeSeconds()}:F>**!\n> {note}");
+            await RespondAsync($"Reminder set for **<t:{offsettedTime.ToUnixTimeSeconds()}:F>**!\n> {note}");
         }
     }
 }
