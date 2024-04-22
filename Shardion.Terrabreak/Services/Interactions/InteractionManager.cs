@@ -60,7 +60,14 @@ namespace Shardion.Terrabreak.Services.Interactions
                         .WithTitle("Internal Error")
                         .WithDescription($"An internal error occurred and your command couldn't be executed to completion.{primaryDevSection}")
                         .AddField("Error", $"**`{result.Error}`**: {result.ErrorReason}");
-                    await context.Interaction.RespondAsync("", embed: errorEmbed.Build(), ephemeral: true);
+                    if (!context.Interaction.HasResponded)
+                    {
+                        await context.Interaction.RespondAsync("", embed: errorEmbed.Build(), ephemeral: true);
+                    }
+                    else
+                    {
+                        await context.Interaction.FollowupAsync("", embed: errorEmbed.Build(), ephemeral: true);
+                    }
                 }
             };
 
