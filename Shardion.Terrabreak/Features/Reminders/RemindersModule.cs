@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
 using LiteDB;
-using Serilog;
 using Shardion.Terrabreak.Services.Timeout;
 
 namespace Shardion.Terrabreak.Features.Reminders
@@ -21,7 +20,13 @@ namespace Shardion.Terrabreak.Features.Reminders
         }
 
         [SlashCommand("remind", "Pings you at a specified time in the future with a specified note.")]
-        public async Task Remind(string note, int days = 0, int hours = 0, int minutes = 0, int seconds = 0)
+        public async Task Remind(
+            [Summary(description: "The note that you will be pinged with.")] string note,
+            [Summary(description: "A number of days to add to the expiry time.")] int days = 0,
+            [Summary(description: "A number of hours to add to the expiry time.")] int hours = 0,
+            [Summary(description: "A number of minutes to add to the expiry time.")] int minutes = 0,
+            [Summary(description: "A number of seconds to add to the expiry time.")] int seconds = 0
+        )
         {
             TimeSpan offset = new(days, hours, minutes, seconds);
             if (offset <= TimeSpan.Zero)
