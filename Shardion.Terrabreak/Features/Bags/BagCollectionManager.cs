@@ -15,7 +15,7 @@ namespace Shardion.Terrabreak.Features.Bags
 
         public Bag CreateBag(ulong userId, string name)
         {
-            Bag bag = new Bag()
+            Bag bag = new()
             {
                 Name = name,
                 OwnerId = userId,

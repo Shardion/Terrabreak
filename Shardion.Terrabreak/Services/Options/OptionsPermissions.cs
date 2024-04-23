@@ -1,24 +1,24 @@
 namespace Shardion.Terrabreak.Services.Options
 {
-    public struct OptionsPermissions
+    public readonly struct OptionsPermissions
     {
-        public OptionsAccessibility Bot;
-        public OptionsAccessibility Servers;
-        public OptionsAccessibility Users;
+        public OptionsAccessibility Bot { get; init; }
+        public OptionsAccessibility Servers { get; init; }
+        public OptionsAccessibility Users { get; init; }
 
         public bool AccessibleTo(OptionsAccessor accessor, OptionsAccessibility accessibility) => accessor switch
         {
-            OptionsAccessor.Bot => IsAccessible(Bot),
-            OptionsAccessor.Server => IsAccessible(Servers),
-            OptionsAccessor.User => IsAccessible(Users),
+            OptionsAccessor.Bot => IsAccessible(Bot, accessibility),
+            OptionsAccessor.Server => IsAccessible(Servers, accessibility),
+            OptionsAccessor.User => IsAccessible(Users, accessibility),
             _ => false,
         };
 
-        public static bool IsAccessible(OptionsAccessibility accessibility) => accessibility switch
+        public static bool IsAccessible(OptionsAccessibility baseline, OptionsAccessibility check) => baseline switch
         {
             OptionsAccessibility.ReadWrite => true,
-            OptionsAccessibility.Read => IsReadable(accessibility),
-            OptionsAccessibility.Write => IsWritable(accessibility),
+            OptionsAccessibility.Read => IsReadable(check),
+            OptionsAccessibility.Write => IsWritable(check),
             _ => false,
         };
 
