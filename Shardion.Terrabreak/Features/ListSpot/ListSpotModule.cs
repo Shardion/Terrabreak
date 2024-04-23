@@ -16,7 +16,7 @@ namespace Shardion.Terrabreak.Features.ListSpot
             _identity = options;
         }
 
-        [SlashCommand("list-spot", "Posts an embed showing the song you're currently listening to on Spotify")]
+        [SlashCommand("list-spot", "Sends an embed displaying the song you're currently listening to on Spotify.")]
         public async Task ListSpot()
         {
             SpotifyGame? spotify = null;

@@ -24,9 +24,11 @@ namespace Shardion.Terrabreak.Features.MachineTranslation
         }
 
         [SlashCommand("translate", "Translates the provided text with a machine translation service.")]
-        public async Task Translate(string message)
+        public async Task Translate(
+            [Summary(description: "The text to translate.")] string text
+        )
         {
-            Task<ITranslationResult> resultTask = _machineTranslation.Translator.TranslateAsync(message, "en");
+            Task<ITranslationResult> resultTask = _machineTranslation.Translator.TranslateAsync(text, "en");
             Task deferralTask = DeferAsync();
 
             ITranslationResult result = await resultTask;

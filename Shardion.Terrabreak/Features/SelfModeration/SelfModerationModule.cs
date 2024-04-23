@@ -13,7 +13,9 @@ namespace Shardion.Terrabreak.Features.SelfModeration
     public class SelfModerationModule : InteractionModuleBase
     {
         [SlashCommand("selfpurge", "Deletes all of your messages within a specified timeframe.")]
-        public async Task SelfPurge(int minutes)
+        public async Task SelfPurge(
+            [Summary(description: "How many minutes of messages to delete.")] int minutes
+        )
         {
             if (Context.Channel is not ITextChannel textChannel)
             {

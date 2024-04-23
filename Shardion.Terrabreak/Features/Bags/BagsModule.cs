@@ -1,13 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
-using Discord.WebSocket;
-using Serilog;
-using Shardion.Terrabreak.Services.Discord;
 
 namespace Shardion.Terrabreak.Features.Bags
 {
@@ -17,6 +13,7 @@ namespace Shardion.Terrabreak.Features.Bags
     public class BagsModule : InteractionModuleBase
     {
         private static readonly ConcurrentDictionary<string, PendingEntry> _pendingEntries = [];
+
         private readonly BagCollectionManager _bags;
 
         public BagsModule(BagCollectionManager bags)
@@ -26,7 +23,7 @@ namespace Shardion.Terrabreak.Features.Bags
 
         [SlashCommand("create", "Creates a new bag.")]
         public async Task Create(
-            [Summary(description: "The name of the bag to create")] string name
+            [Summary(description: "The name of the bag to create.")] string name
         )
         {
             if (_bags.GetBag(Context.User.Id, name) is not null)
@@ -41,14 +38,14 @@ namespace Shardion.Terrabreak.Features.Bags
 
         [SlashCommand("add", "Adds an entry to a bag.")]
         public async Task Add(
-            [Summary(description: "The name of the bag to add the entry to")] string name,
-            [Summary(description: "The text of the entry")] string entry
+            [Summary(name: "bag", description: "The name of the bag to add the entry to.")] string bagName,
+            [Summary(description: "The text of the entry.")] string entry
         )
         {
-            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, name);
+            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, bagName);
             if (bagSearchResult is not Bag bag)
             {
-                await RespondAsync($"Bag **`{name}`** does not exist!", ephemeral: true);
+                await RespondAsync($"Bag **`{bagName}`** does not exist!", ephemeral: true);
                 return;
             }
 
@@ -58,24 +55,24 @@ namespace Shardion.Terrabreak.Features.Bags
                 return;
             }
 
-            await RespondAsync($"Added to bag **`{name}`**.\n> {entry}");
+            await RespondAsync($"Added to bag **`{bagName}`**.\n> {entry}");
         }
 
         [SlashCommand("take", "Displays a random entry from a bag, optionally removing it.")]
         public async Task Take(
-            [Summary(description: "The name of the bag to take an entry from")] string name
+            [Summary(name: "bag", description: "The name of the bag to take an entry from.")] string bagName
         )
         {
-            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, name);
+            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, bagName);
             if (bagSearchResult is not Bag bag)
             {
-                await RespondAsync($"Bag **`{name}`** does not exist!", ephemeral: true);
+                await RespondAsync($"Bag **`{bagName}`** does not exist!", ephemeral: true);
                 return;
             }
 
             if (bag.Entries.Count <= 0)
             {
-                await RespondAsync($"Bag **`{name}`** is empty!", ephemeral: true);
+                await RespondAsync($"Bag **`{bagName}`** is empty!", ephemeral: true);
                 return;
             }
 
@@ -95,7 +92,7 @@ namespace Shardion.Terrabreak.Features.Bags
             var component = new ComponentBuilder()
                 .WithButton("Remove from bag", customId: componentCustomId, emote: emoji);
 
-            await RespondAsync($"Taken entry from bag **`{name}`**.\n> {entry}", components: component.Build());
+            await RespondAsync($"Taken entry from bag **`{bagName}`**.\n> {entry}", components: component.Build());
 
             await Task.Delay(TimeSpan.FromSeconds(30));
             _pendingEntries.TryRemove(entryGuid, out _);
@@ -134,16 +131,16 @@ namespace Shardion.Terrabreak.Features.Bags
             }
         }
 
-        [SlashCommand("delete", "Deletes an existing bag")]
+        [SlashCommand("delete", "Deletes an existing bag.")]
         public async Task Delete(
-            [Summary(description: "The name of the bag to delete")] string name,
-            [Summary(description: "If bags which are not empty should be deleted")] bool force = false
+            [Summary(name: "bag", description: "The name of the bag to delete.")] string bagName,
+            [Summary(description: "If bags which are not empty should be deleted.")] bool force = false
         )
         {
-            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, name);
+            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, bagName);
             if (bagSearchResult is not Bag bag)
             {
-                await RespondAsync($"Bag **`{name}`** does not exist!", ephemeral: true);
+                await RespondAsync($"Bag **`{bagName}`** does not exist!", ephemeral: true);
                 return;
             }
 

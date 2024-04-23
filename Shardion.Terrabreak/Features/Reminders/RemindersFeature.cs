@@ -1,11 +1,11 @@
 using LiteDB;
 using Shardion.Terrabreak.Services.Timeout;
-using Shardion.Terrabreak.Services.Options;
 using Shardion.Terrabreak.Services.Discord;
 using Discord;
 using Serilog;
 using System.Threading.Tasks;
 using System;
+using Discord.Net;
 
 namespace Shardion.Terrabreak.Features.Reminders
 {
@@ -13,16 +13,13 @@ namespace Shardion.Terrabreak.Features.Reminders
     {
         private readonly DiscordManager _discordManager;
         private readonly TimeoutManager _timeoutManager;
-        private readonly OptionsManager _optionsManager;
         private readonly TimeoutCollectionManager _databaseTimeouts;
 
-        public RemindersFeature(DiscordManager discordManager, TimeoutManager timeoutManager, OptionsManager optionsManager, TimeoutCollectionManager databaseTimeouts)
+        public RemindersFeature(DiscordManager discordManager, TimeoutManager timeoutManager, TimeoutCollectionManager databaseTimeouts)
         {
             _discordManager = discordManager;
             _timeoutManager = timeoutManager;
-            _optionsManager = optionsManager;
             _databaseTimeouts = databaseTimeouts;
-
             _timeoutManager.TimeoutExpired += async (timeout) =>
             {
                 try
@@ -132,17 +129,47 @@ namespace Shardion.Terrabreak.Features.Reminders
                     IChannel? targetChannel = await targetChannelTask;
                     if (targetChannel is IMessageChannel validChannel)
                     {
-                        await validChannel.SendMessageAsync(messageContent, allowedMentions: messageMentions);
+                        try
+                        {
+                            await validChannel.SendMessageAsync(messageContent, allowedMentions: messageMentions);
+                        }
+                        catch (HttpException channelDeliveryException)
+                        {
+                            Log.Error($"Got error {nameof(channelDeliveryException)} while trying to send reminder {timeout.Id} to channel {targetChannel.Id}. Trying again in DMs.");
+                            Log.Error(channelDeliveryException.ToString());
+                            if (targetUser is not null)
+                            {
+                                try
+                                {
+                                    await targetUser.SendMessageAsync(messageContent, allowedMentions: messageMentions);
+                                }
+                                catch (HttpException dmsDeliveryException)
+                                {
+                                    Log.Error($"Got error {nameof(dmsDeliveryException)} while trying to send reminder {timeout.Id} to DMs of user {targetUser.Id}. Dropping!");
+                                }
+                            }
+                            else
+                            {
+                                Log.Error($"Dropped reminder {timeout.Id} as no valid non-erroring delivery area could be found!");
+                            }
+                        }
                     }
                     else
                     {
                         if (targetUser is not null)
                         {
-                            await targetUser.SendMessageAsync(messageContent, allowedMentions: messageMentions);
+                            try
+                            {
+                                await targetUser.SendMessageAsync(messageContent, allowedMentions: messageMentions);
+                            }
+                            catch (HttpException dmsDeliveryException)
+                            {
+                                Log.Error($"Got error {nameof(dmsDeliveryException)} while trying to send reminder {timeout.Id} to DMs of user {targetUser.Id}. Dropping!");
+                            }
                         }
                         else
                         {
-                            Log.Error($"Dropped reminder {timeout.Id} as fallback channel was invalid!!! ", timeout.Id);
+                            Log.Error($"Dropped reminder {timeout.Id} as no valid non-erroring delivery area could be found!");
                         }
                     }
                 }
