@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using LiteDB;
+using System.ComponentModel.DataAnnotations;
 
 namespace Shardion.Terrabreak.Features.Bags
 {
     public class Bag
     {
-        [BsonId]
-        public Guid Id { get; set; } = Guid.NewGuid();
+        [Key]
+        public Guid Id { get; set; }
 
         public required string Name { get; set; }
         public required ulong? OwnerId { get; set; }

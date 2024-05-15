@@ -1,15 +1,15 @@
 using System;
-using LiteDB;
+using System.ComponentModel.DataAnnotations;
 
 namespace Shardion.Terrabreak.Services.Timeout
 {
     public class Timeout
     {
-        [BsonId]
-        public Guid Id { get; set; } = Guid.NewGuid();
+        [Key]
+        public Guid Id { get; set; }
 
         public required string Identifier { get; set; }
-        public required BsonDocument Data { get; set; }
+        public required byte[] Data { get; set; }
 
         public required DateTimeOffset ExpirationDate { get; set; }
         public bool ExpiryProcessed { get; set; }

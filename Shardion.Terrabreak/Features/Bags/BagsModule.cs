@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
+using Shardion.Terrabreak.Services.Database;
 
 namespace Shardion.Terrabreak.Features.Bags
 {
@@ -14,11 +15,11 @@ namespace Shardion.Terrabreak.Features.Bags
     {
         private static readonly ConcurrentDictionary<string, PendingEntry> _pendingEntries = [];
 
-        private readonly BagCollectionManager _bags;
+        private readonly TerrabreakDatabaseContext _db;
 
-        public BagsModule(BagCollectionManager bags)
+        public BagsModule(TerrabreakDatabaseContext db)
         {
-            _bags = bags;
+            _db = db;
         }
 
         [SlashCommand("create", "Creates a new bag.")]
@@ -26,13 +27,13 @@ namespace Shardion.Terrabreak.Features.Bags
             [Summary(description: "The name of the bag to create.")] string name
         )
         {
-            if (_bags.GetBag(Context.User.Id, name) is not null)
+            if (_db.GetBag(Context.User.Id, name) is not null)
             {
                 await RespondAsync($"Bag **`{name}`** already exists!", ephemeral: true);
                 return;
             }
 
-            Bag bag = _bags.CreateBag(Context.User.Id, name);
+            Bag bag = _db.CreateBag(Context.User.Id, name);
             await RespondAsync($"Bag **`{bag.Name}`** created.", ephemeral: true);
         }
 
@@ -42,14 +43,14 @@ namespace Shardion.Terrabreak.Features.Bags
             [Summary(description: "The text of the entry.")] string entry
         )
         {
-            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, bagName);
+            Bag? bagSearchResult = _db.GetBag(Context.User.Id, bagName);
             if (bagSearchResult is not Bag bag)
             {
                 await RespondAsync($"Bag **`{bagName}`** does not exist!", ephemeral: true);
                 return;
             }
 
-            if (!_bags.AddToBag(bag, entry))
+            if (!_db.AddToBag(bag, entry))
             {
                 await RespondAsync($"Failed to add to bag **`{bag.Name}`**!\n> {entry}", ephemeral: true);
                 return;
@@ -63,7 +64,7 @@ namespace Shardion.Terrabreak.Features.Bags
             [Summary(name: "bag", description: "The name of the bag to take an entry from.")] string bagName
         )
         {
-            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, bagName);
+            Bag? bagSearchResult = _db.GetBag(Context.User.Id, bagName);
             if (bagSearchResult is not Bag bag)
             {
                 await RespondAsync($"Bag **`{bagName}`** does not exist!", ephemeral: true);
@@ -115,13 +116,13 @@ namespace Shardion.Terrabreak.Features.Bags
 
             if (_pendingEntries.TryRemove(entryGuid, out PendingEntry? nullableEntry) && nullableEntry is PendingEntry entry)
             {
-                if (_bags.GetBag(Context.User.Id, entry.BagName) is not Bag bag)
+                if (_db.GetBag(Context.User.Id, entry.BagName) is not Bag bag)
                 {
                     await RespondAsync("Internal error while trying to get the bag associated with this entry. Please try again.", ephemeral: true);
                     return;
                 }
 
-                _bags.RemoveFromBag(bag, entry.Entry);
+                _db.RemoveFromBag(bag, entry.Entry);
 
                 await RespondAsync($"Removed entry from bag **`{bag.Name}`**.", ephemeral: true);
             }
@@ -137,7 +138,7 @@ namespace Shardion.Terrabreak.Features.Bags
             [Summary(description: "If bags which are not empty should be deleted.")] bool force = false
         )
         {
-            Bag? bagSearchResult = _bags.GetBag(Context.User.Id, bagName);
+            Bag? bagSearchResult = _db.GetBag(Context.User.Id, bagName);
             if (bagSearchResult is not Bag bag)
             {
                 await RespondAsync($"Bag **`{bagName}`** does not exist!", ephemeral: true);
@@ -150,7 +151,7 @@ namespace Shardion.Terrabreak.Features.Bags
                 return;
             }
 
-            if (!_bags.DeleteBag(bag))
+            if (!_db.DeleteBag(bag))
             {
                 await RespondAsync($"Failed to delete bag **`{bag.Name}`**!", ephemeral: true);
                 return;

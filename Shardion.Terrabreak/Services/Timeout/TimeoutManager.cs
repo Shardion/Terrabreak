@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
+using Shardion.Terrabreak.Services.Database;
 
 namespace Shardion.Terrabreak.Services.Timeout
 {
@@ -13,7 +15,7 @@ namespace Shardion.Terrabreak.Services.Timeout
         public event Func<Timeout, Task>? TimeoutExpired;
 
         private readonly ConcurrentDictionary<Guid, Timeout> MemoryTimeouts;
-        private readonly TimeoutCollectionManager DatabaseTimeouts;
+        private readonly IDbContextFactory<TerrabreakDatabaseContext> DatabaseTimeoutsFactory;
 
         private readonly Thread _timeoutExpiryThread;
         private readonly Thread _timeoutLoadingThread;
@@ -26,10 +28,10 @@ namespace Shardion.Terrabreak.Services.Timeout
 
         private bool _disposed;
 
-        public TimeoutManager(TimeoutCollectionManager databaseTimeouts)
+        public TimeoutManager(IDbContextFactory<TerrabreakDatabaseContext> databaseTimeoutsFactory)
         {
             MemoryTimeouts = [];
-            DatabaseTimeouts = databaseTimeouts;
+            DatabaseTimeoutsFactory = databaseTimeoutsFactory;
 
             _timeoutThreadMutex = new();
             _tokenSource = new();
@@ -44,27 +46,32 @@ namespace Shardion.Terrabreak.Services.Timeout
                 _timeoutThreadMutex.WaitOne();
 
                 Timeout? nearestTimeout = null;
-                foreach (Timeout timeout in MemoryTimeouts.Values)
+
+                using (TerrabreakDatabaseContext context = DatabaseTimeoutsFactory.CreateDbContext())
                 {
-                    if (!timeout.ExpiryProcessed)
+                    foreach (Timeout timeout in MemoryTimeouts.Values)
                     {
-                        if (timeout.ExpirationDate < DateTimeOffset.UtcNow)
+                        if (!timeout.ExpiryProcessed)
                         {
-                            Task.Run(() =>
+                            if (timeout.ExpirationDate < DateTimeOffset.UtcNow)
                             {
-                                TimeoutExpired?.Invoke(timeout);
-                            });
-                            timeout.ExpiryProcessed = true;
-                            DatabaseTimeouts.Collection.Update(timeout);
-                        }
-                        else
-                        {
-                            if (nearestTimeout is null || timeout.ExpirationDate.CompareTo(nearestTimeout.ExpirationDate) < 0)
+                                Task.Run(() =>
+                                {
+                                    TimeoutExpired?.Invoke(timeout);
+                                });
+                                timeout.ExpiryProcessed = true;
+                                context.Update(timeout);
+                            }
+                            else
                             {
-                                nearestTimeout = timeout;
+                                if (nearestTimeout is null || timeout.ExpirationDate.CompareTo(nearestTimeout.ExpirationDate) < 0)
+                                {
+                                    nearestTimeout = timeout;
+                                }
                             }
                         }
                     }
+                    context.SaveChanges();
                 }
 
                 _timeoutThreadMutex.ReleaseMutex();
@@ -72,7 +79,15 @@ namespace Shardion.Terrabreak.Services.Timeout
                 if (nearestTimeout is not null)
                 {
                     TimeSpan sleepTime = nearestTimeout.ExpirationDate - DateTimeOffset.UtcNow;
-                    _expiryThreadSleepTask = Task.Delay(sleepTime);
+                    if (sleepTime.TotalMicroseconds > 0)
+                    {
+                        _expiryThreadSleepTask = Task.Delay(sleepTime);
+                    }
+                    else
+                    {
+                        // #itjustworks
+                        _expiryThreadSleepTask = Task.Delay(50);
+                    }
                 }
                 else
                 {
@@ -99,20 +114,25 @@ namespace Shardion.Terrabreak.Services.Timeout
             {
                 _timeoutThreadMutex.WaitOne();
 
-                foreach (KeyValuePair<Guid, Timeout> pair in MemoryTimeouts.Where(timeout => timeout.Value.ExpiryProcessed))
-                {
-                    _ = MemoryTimeouts.TryRemove(pair);
-                }
-                DatabaseTimeouts.Collection.DeleteMany(timeout => timeout.ExpiryProcessed);
-
                 bool timerAdded = false;
 
-                foreach (Timeout timeout in DatabaseTimeouts.Collection.FindAll().Where(timeout => timeout.IsNear() && !timeout.ExpiryProcessed))
+                using (TerrabreakDatabaseContext context = DatabaseTimeoutsFactory.CreateDbContext())
                 {
-                    if (MemoryTimeouts.TryAdd(timeout.Id, timeout))
+                    foreach (KeyValuePair<Guid, Timeout> pair in MemoryTimeouts.Where(timeout => timeout.Value.ExpiryProcessed))
                     {
-                        timerAdded = true;
+                        _ = MemoryTimeouts.TryRemove(pair);
                     }
+                    context.RemoveRange(context.Set<Timeout>().Where(t => t.ExpiryProcessed));
+
+                    foreach (Timeout timeout in context.Set<Timeout>().AsEnumerable().Where(timeout => timeout.IsNear() && !timeout.ExpiryProcessed))
+                    {
+                        if (MemoryTimeouts.TryAdd(timeout.Id, timeout))
+                        {
+                            timerAdded = true;
+                        }
+                    }
+
+                    context.SaveChanges();
                 }
 
                 _timeoutThreadMutex.ReleaseMutex();
@@ -129,6 +149,10 @@ namespace Shardion.Terrabreak.Services.Timeout
 
         public void BeginTimeout(Timeout timeout)
         {
+            bool wakeUpProcessingThread = false;
+
+            _timeoutThreadMutex.WaitOne();
+
             if (timeout.IsNear())
             {
                 if (!MemoryTimeouts.TryAdd(timeout.Id, timeout))
@@ -137,13 +161,28 @@ namespace Shardion.Terrabreak.Services.Timeout
                 }
 
                 // Wakes up timeout processing thread which will adjust its sleep time to fit this timeout
+                wakeUpProcessingThread = true;
+            }
+
+            using (TerrabreakDatabaseContext context = DatabaseTimeoutsFactory.CreateDbContext())
+            {
+                if (context.Find<Timeout>(timeout.Id) is not null)
+                {
+                    Log.Error("TimeoutManager tried to add new timeout to database when it already exists!!!");
+                }
+                else
+                {
+                    context.Add(timeout);
+                    context.SaveChanges();
+                }
+            }
+
+            _timeoutThreadMutex.ReleaseMutex();
+
+            if (wakeUpProcessingThread)
+            {
                 _tokenSource.Cancel();
             }
-            if (DatabaseTimeouts.Collection.FindById(timeout.Id) is not null)
-            {
-                Log.Error("TimeoutManager tried to add new timeout to database when it already exists!!!");
-            }
-            _ = DatabaseTimeouts.Collection.Insert(timeout);
         }
 
         public Task StartAsync()

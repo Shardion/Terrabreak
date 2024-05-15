@@ -2,17 +2,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using Serilog.Events;
-using Discord;
 using Shardion.Terrabreak.Services.Options;
-using Shardion.Terrabreak.Services.Discord;
-using Shardion.Terrabreak.Services.Interactions;
-using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Shardion.Terrabreak.Services.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace Shardion.Terrabreak
 {
@@ -63,6 +60,10 @@ namespace Shardion.Terrabreak
                 builder.Services.AddSingleton(serviceType);
             }
 
+            Action<DbContextOptionsBuilder> builderAction = ConfigureDb(builder.Configuration.GetRequiredSection("Database").Get<DatabaseOptions>()!);
+            builder.Services.AddDbContext<TerrabreakDatabaseContext>(builderAction);
+            builder.Services.AddDbContextFactory<TerrabreakDatabaseContext>(builderAction);
+
             using IHost host = builder.Build();
 
             List<Task> serviceTasks = [];
@@ -110,6 +111,17 @@ namespace Shardion.Terrabreak
                 return Path.Join(home, ".config", "terrabreak", $"{filename}{extension}");
             }
             return Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "terrabreak", $"{filename}{extension}");
+        }
+
+        public static Action<DbContextOptionsBuilder> ConfigureDb(DatabaseOptions options)
+        {
+            return (DbContextOptionsBuilder builder) =>
+            {
+                builder.UseSqlite(options.ConnectionString);
+#if DEBUG
+                builder.EnableSensitiveDataLogging(true);
+#endif
+            };
         }
     }
 }

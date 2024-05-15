@@ -1,9 +1,9 @@
 using System;
 using System.Globalization;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Interactions;
-using LiteDB;
 using Shardion.Terrabreak.Services.Timeout;
 
 namespace Shardion.Terrabreak.Features.Reminders
@@ -37,23 +37,23 @@ namespace Shardion.Terrabreak.Features.Reminders
 
             DateTimeOffset offsettedTime = DateTimeOffset.UtcNow.Add(offset);
 
-            BsonDocument timerInfo = new()
+            ReminderInfo timerInfo = new()
             {
-                ["note"] = note,
-                ["startTime"] = DateTimeOffset.UtcNow.UtcDateTime,
-                ["uid"] = Context.User.Id.ToString(CultureInfo.InvariantCulture),
+                Note = note,
+                StartTime = DateTimeOffset.UtcNow,
+                UserId = Context.User.Id.ToString(CultureInfo.InvariantCulture),
             };
 
             if (Context.Channel is ITextChannel)
             {
-                timerInfo["cid"] = Context.Channel.Id.ToString(CultureInfo.InvariantCulture);
+                timerInfo.ChannelId = Context.Channel.Id.ToString(CultureInfo.InvariantCulture);
             }
 
             Timeout timeout = new()
             {
                 Identifier = "reminder",
                 ExpirationDate = offsettedTime,
-                Data = timerInfo,
+                Data = JsonSerializer.SerializeToUtf8Bytes(timerInfo),
                 ExpiryProcessed = false,
             };
             _timeoutManager.BeginTimeout(timeout);

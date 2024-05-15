@@ -1,4 +1,3 @@
-using LiteDB;
 using Shardion.Terrabreak.Services.Timeout;
 using Shardion.Terrabreak.Services.Discord;
 using Discord;
@@ -6,6 +5,7 @@ using Serilog;
 using System.Threading.Tasks;
 using System;
 using Discord.Net;
+using System.Text.Json;
 
 namespace Shardion.Terrabreak.Features.Reminders
 {
@@ -27,8 +27,15 @@ namespace Shardion.Terrabreak.Features.Reminders
                         return;
                     }
 
+                    using JsonDocument document = JsonDocument.Parse(timeout.Data);
+
+                    if (document.RootElement.ValueKind != JsonValueKind.Object)
+                    {
+                        throw new JsonException("JSON is so badly malformed that I have no idea what to do with it");
+                    }
+
                     ulong? uid;
-                    if (!timeout.Data.TryGetValue("uid", out BsonValue unparsedUid) || !unparsedUid.IsString || !ulong.TryParse(unparsedUid.AsString, out ulong parsedUid))
+                    if (!document.RootElement.TryGetProperty("UserId", out JsonElement unparsedUid) || unparsedUid.ValueKind != JsonValueKind.String || !ulong.TryParse(unparsedUid.ToString(), out ulong parsedUid))
                     {
                         uid = null;
                     }
@@ -48,7 +55,7 @@ namespace Shardion.Terrabreak.Features.Reminders
                     }
 
                     ulong? cid;
-                    if (!timeout.Data.TryGetValue("cid", out BsonValue unparsedCid) || !unparsedCid.IsString || !ulong.TryParse(unparsedCid.AsString, out ulong parsedCid))
+                    if (!document.RootElement.TryGetProperty("ChannelId"u8, out JsonElement unparsedCid) || unparsedCid.ValueKind != JsonValueKind.String || !ulong.TryParse(unparsedCid.GetString(), out ulong parsedCid))
                     {
                         cid = null;
                     }
@@ -68,23 +75,30 @@ namespace Shardion.Terrabreak.Features.Reminders
                     }
 
                     DateTimeOffset? startTime;
-                    if (!timeout.Data.TryGetValue("startTime", out BsonValue unparsedStartTime) || !unparsedStartTime.IsDateTime)
+                    if (!document.RootElement.TryGetProperty("StartTime"u8, out JsonElement unparsedStartTime))
                     {
                         startTime = null;
                     }
                     else
                     {
-                        startTime = new DateTimeOffset(unparsedStartTime.AsDateTime);
+                        try
+                        {
+                            startTime = unparsedStartTime.Deserialize<DateTimeOffset>();
+                        }
+                        catch (JsonException)
+                        {
+                            startTime = null;
+                        }
                     }
 
                     string? reminderNote;
-                    if (!timeout.Data.TryGetValue("note", out BsonValue note) || !note.IsString)
+                    if (!document.RootElement.TryGetProperty("Note"u8, out JsonElement note) || note.ValueKind != JsonValueKind.String)
                     {
                         reminderNote = null;
                     }
                     else
                     {
-                        reminderNote = note.AsString;
+                        reminderNote = note.GetString();
                     }
 
                     string reminderTimeLine;

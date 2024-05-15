@@ -2,7 +2,7 @@ using Shardion.Terrabreak.Services.Options;
 
 namespace Shardion.Terrabreak.Services.Database
 {
-    public sealed class DatabaseManagerOptions : IStaticOptions
+    public sealed class DatabaseOptions : IStaticOptions
     {
         public string SectionName => "Database";
 
