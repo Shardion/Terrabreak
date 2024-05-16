@@ -155,26 +155,14 @@ namespace Shardion.Terrabreak.Services.Timeout
 
             if (timeout.IsNear())
             {
-                if (!MemoryTimeouts.TryAdd(timeout.Id, timeout))
-                {
-                    Log.Error("TimeoutManager tried to add new timeout to memory when it already exists!!!");
-                }
-
-                // Wakes up timeout processing thread which will adjust its sleep time to fit this timeout
+                MemoryTimeouts[timeout.Id] = timeout;
                 wakeUpProcessingThread = true;
             }
 
             using (TerrabreakDatabaseContext context = DatabaseTimeoutsFactory.CreateDbContext())
             {
-                if (context.Find<Timeout>(timeout.Id) is not null)
-                {
-                    Log.Error("TimeoutManager tried to add new timeout to database when it already exists!!!");
-                }
-                else
-                {
-                    context.Add(timeout);
-                    context.SaveChanges();
-                }
+                context.Update(timeout);
+                context.SaveChanges();
             }
 
             _timeoutThreadMutex.ReleaseMutex();
