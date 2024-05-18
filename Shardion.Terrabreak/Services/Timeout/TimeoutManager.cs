@@ -52,7 +52,6 @@ namespace Shardion.Terrabreak.Services.Timeout
                                 TimeoutExpired?.Invoke(timeout);
                             });
                             timeout.ExpiryProcessed = true;
-                            context.Update(timeout);
                         }
                         else
                         {
