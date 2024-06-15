@@ -67,9 +67,10 @@ namespace Shardion.Terrabreak.Services.Timeout
                 if (nearestTimeout is not null)
                 {
                     TimeSpan sleepTime = nearestTimeout.ExpirationDate - DateTimeOffset.UtcNow;
-                    if (sleepTime.TotalMicroseconds > 0)
+                    int sleepMillis = Convert.ToInt32(sleepTime.TotalMilliseconds);
+                    if (sleepMillis > 0)
                     {
-                        _expiryThreadSleepTask = Task.Delay(sleepTime);
+                        _expiryThreadSleepTask = Task.Delay(sleepMillis);
                     }
                     else
                     {
