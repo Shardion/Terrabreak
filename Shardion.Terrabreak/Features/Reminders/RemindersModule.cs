@@ -20,7 +20,7 @@ namespace Shardion.Terrabreak.Features.Reminders
         }
 
         [SlashCommand("remind", "Pings you at a specified time in the future with a specified note.")]
-        public async Task Remind(
+        public async Task CreateReminder(
             [Summary(description: "The note that you will be pinged with.")] string note,
             [Summary(description: "A number of days to add to the expiry time.")] int days = 0,
             [Summary(description: "A number of hours to add to the expiry time.")] int hours = 0,

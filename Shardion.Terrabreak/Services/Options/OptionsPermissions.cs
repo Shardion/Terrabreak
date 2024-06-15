@@ -6,33 +6,20 @@ namespace Shardion.Terrabreak.Services.Options
         public OptionsAccessibility Servers { get; init; }
         public OptionsAccessibility Users { get; init; }
 
-        public bool AccessibleTo(OptionsAccessor accessor, OptionsAccessibility accessibility) => accessor switch
+        public OptionsAccessibility AccessibilityFor(OptionsAccessor accessor) => accessor switch
         {
-            OptionsAccessor.Bot => IsAccessible(Bot, accessibility),
-            OptionsAccessor.Server => IsAccessible(Servers, accessibility),
-            OptionsAccessor.User => IsAccessible(Users, accessibility),
-            _ => false,
+            OptionsAccessor.Bot => Bot,
+            OptionsAccessor.Server => Servers,
+            OptionsAccessor.User => Users,
+            _ => OptionsAccessibility.None,
         };
 
-        public static bool IsAccessible(OptionsAccessibility baseline, OptionsAccessibility check) => baseline switch
+        public bool IsAccessible(OptionsAccessor accessor, OptionsAccessibility desiredPermission) => AccessibilityFor(accessor) switch
         {
+            OptionsAccessibility.None => false,
             OptionsAccessibility.ReadWrite => true,
-            OptionsAccessibility.Read => IsReadable(check),
-            OptionsAccessibility.Write => IsWritable(check),
-            _ => false,
-        };
-
-        public static bool IsReadable(OptionsAccessibility accessibility) => accessibility switch
-        {
-            OptionsAccessibility.Read => true,
-            OptionsAccessibility.ReadWrite => true,
-            _ => false,
-        };
-
-        public static bool IsWritable(OptionsAccessibility accessibility) => accessibility switch
-        {
-            OptionsAccessibility.Write => true,
-            OptionsAccessibility.ReadWrite => true,
+            OptionsAccessibility.Read => desiredPermission == OptionsAccessibility.Read,
+            OptionsAccessibility.Write => desiredPermission == OptionsAccessibility.Write,
             _ => false,
         };
     }
