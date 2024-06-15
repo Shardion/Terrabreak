@@ -51,15 +51,15 @@ namespace Shardion.Terrabreak.Services.Options
         {
             if (userId is not null)
             {
-                return permissions.AccessibleTo(OptionsAccessor.User, OptionsAccessibility.Read);
+                return permissions.IsAccessible(OptionsAccessor.User, OptionsAccessibility.ReadWrite);
             }
             else if (serverId is not null)
             {
-                return permissions.AccessibleTo(OptionsAccessor.Server, OptionsAccessibility.Read);
+                return permissions.IsAccessible(OptionsAccessor.Server, OptionsAccessibility.ReadWrite);
             }
             else
             {
-                return permissions.AccessibleTo(OptionsAccessor.Bot, OptionsAccessibility.Read);
+                return permissions.IsAccessible(OptionsAccessor.Bot, OptionsAccessibility.ReadWrite);
             }
         }
 

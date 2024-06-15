@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
 using Shardion.Terrabreak.Services.Database;
 
 namespace Shardion.Terrabreak.Services.Timeout
@@ -112,7 +109,23 @@ namespace Shardion.Terrabreak.Services.Timeout
             }
         }
 
-        public void BeginTimeout(Timeout timeout)
+        public Timeout? GetTimeout(Guid timeoutGuid)
+        {
+            using TerrabreakDatabaseContext context = DatabaseContextFactory.CreateDbContext();
+            return context.Set<Timeout>().Find(timeoutGuid);
+        }
+
+        public bool BeginTimeout(Guid timeoutGuid)
+        {
+            Timeout? timeout = GetTimeout(timeoutGuid);
+            if (timeout is null)
+            {
+                return false;
+            }
+            return BeginTimeout(timeout);
+        }
+
+        public bool BeginTimeout(Timeout timeout)
         {
             using (TerrabreakDatabaseContext context = DatabaseContextFactory.CreateDbContext())
             {
@@ -120,6 +133,39 @@ namespace Shardion.Terrabreak.Services.Timeout
                 context.SaveChanges();
             }
             _tokenSource.Cancel();
+            return true;
+        }
+
+        public bool CancelTimeout(Guid timeoutGuid)
+        {
+            Timeout? timeout = GetTimeout(timeoutGuid);
+            if (timeout is null)
+            {
+                return false;
+            }
+            return CancelTimeout(timeout);
+        }
+
+        public bool CancelTimeout(Timeout timeout)
+        {
+            using (TerrabreakDatabaseContext context = DatabaseContextFactory.CreateDbContext())
+            {
+                context.Remove(timeout);
+                context.SaveChanges();
+            }
+            _tokenSource.Cancel();
+            return true;
+        }
+
+        public bool UpdateTimeout(Timeout timeout)
+        {
+            using (TerrabreakDatabaseContext context = DatabaseContextFactory.CreateDbContext())
+            {
+                context.Update(timeout);
+                context.SaveChanges();
+            }
+            _tokenSource.Cancel();
+            return true;
         }
 
         public Task StartAsync()

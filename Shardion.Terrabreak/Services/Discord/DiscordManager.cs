@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Discord;
+using Discord.Rest;
 using Discord.WebSocket;
 using Serilog;
 using Serilog.Events;
@@ -14,6 +15,9 @@ namespace Shardion.Terrabreak.Services.Discord
         public DiscordSocketClient Client { get => _client ?? throw new ObjectDisposedException(typeof(DiscordSocketClient).FullName ?? typeof(DiscordSocketClient).Name); }
         private DiscordSocketClient? _client;
 
+        public DiscordRestClient RestClient { get => _restClient ?? throw new ObjectDisposedException(typeof(DiscordRestClient).FullName ?? typeof(DiscordRestClient).Name); }
+        private DiscordRestClient? _restClient;
+
         private readonly DiscordManagerOptions _discordOptions;
         private readonly OptionsManager _options;
 
@@ -25,7 +29,7 @@ namespace Shardion.Terrabreak.Services.Discord
             _discordOptions = discordOptions;
             _options = options;
 
-            DiscordSocketConfig config = new()
+            DiscordSocketConfig socketConfig = new()
             {
                 GatewayIntents = GatewayIntents.GuildPresences | GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.DirectMessages,
 #if DEBUG
@@ -33,7 +37,17 @@ namespace Shardion.Terrabreak.Services.Discord
 #endif
             };
 
-            _client = new(config);
+            DiscordRestConfig restConfig = new()
+            {
+#if DEBUG
+                LogLevel = LogSeverity.Verbose,
+#endif
+            };
+
+            _restClient = new(restConfig);
+            _restClient.Log += LogAsync;
+
+            _client = new(socketConfig);
             Client.Log += LogAsync;
             Client.Ready += async () =>
             {
@@ -43,6 +57,7 @@ namespace Shardion.Terrabreak.Services.Discord
 
         public async Task StartAsync()
         {
+            await RestClient.LoginAsync(TokenType.Bot, _discordOptions.Token);
             await Client.LoginAsync(TokenType.Bot, _discordOptions.Token);
             await Client.StartAsync();
         }
@@ -111,6 +126,8 @@ namespace Shardion.Terrabreak.Services.Discord
             {
                 _client?.Dispose();
                 _client = null;
+                _restClient?.Dispose();
+                _restClient = null;
             }
         }
 
@@ -122,6 +139,13 @@ namespace Shardion.Terrabreak.Services.Discord
             }
 
             _client = null;
+
+            if (_restClient is not null)
+            {
+                await _restClient.DisposeAsync().ConfigureAwait(false);
+            }
+
+            _restClient = null;
         }
     }
 }

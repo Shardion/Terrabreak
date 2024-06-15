@@ -29,6 +29,7 @@ namespace Shardion.Terrabreak.Services.Interactions
             InteractionServiceConfig config = new()
             {
                 UseCompiledLambda = true,
+                DefaultRunMode = RunMode.Async,
 #if DEBUG
                 LogLevel = LogSeverity.Verbose,
 #endif
