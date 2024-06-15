@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Globalization;
 using System.Threading.Tasks;
 using Discord;
@@ -13,13 +12,14 @@ namespace Shardion.Terrabreak.Features.Bags
     [Group("bag", "Bags, \"Watch Later\" lists for anything you want, which you can take random entries from.")]
     public class BagsModule : InteractionModuleBase
     {
-        private static readonly ConcurrentDictionary<string, PendingEntry> _pendingEntries = [];
+        private readonly BagsFeature _bagsFeature;
 
         private readonly TerrabreakDatabaseContext _db;
 
-        public BagsModule(TerrabreakDatabaseContext db)
+        public BagsModule(TerrabreakDatabaseContext db, BagsFeature bagsFeature)
         {
             _db = db;
+            _bagsFeature = bagsFeature;
         }
 
         [SlashCommand("create", "Creates a new bag.")]
@@ -84,24 +84,27 @@ namespace Shardion.Terrabreak.Features.Bags
 
             string entry = bag.Entries[Random.Shared.Next(bag.Entries.Count)];
 
-            _pendingEntries[entryGuid] = new()
+            _bagsFeature.PendingEntries[entryGuid] = new()
             {
                 BagName = bag.Name,
                 Entry = entry,
             };
 
-            var component = new ComponentBuilder()
-                .WithButton("Remove from bag", customId: componentCustomId, emote: emoji);
+            ComponentBuilder component = new ComponentBuilder()
+                .WithButton("Remove from bag", customId: componentCustomId, emote: emoji, style: ButtonStyle.Danger);
 
             await RespondAsync($"Taken entry from bag **`{bagName}`**.\n> {entry}", components: component.Build());
 
-            await Task.Delay(TimeSpan.FromSeconds(30));
-            _pendingEntries.TryRemove(entryGuid, out _);
-            await ModifyOriginalResponseAsync((message) =>
+            _ = Task.Run(async () =>
             {
-                message.Components = new(new ComponentBuilder()
-                    .WithButton("Remove from bag", emote: emoji, disabled: true, customId: "☃️").Build()
-                );
+                await Task.Delay(TimeSpan.FromSeconds(30));
+                _bagsFeature.PendingEntries.TryRemove(entryGuid, out _);
+                await ModifyOriginalResponseAsync((message) =>
+                {
+                    message.Components = new(new ComponentBuilder()
+                        .WithButton("Remove from bag", emote: emoji, disabled: true, customId: "☃️", style: ButtonStyle.Danger).Build()
+                    );
+                });
             });
         }
 
@@ -114,7 +117,7 @@ namespace Shardion.Terrabreak.Features.Bags
                 return;
             }
 
-            if (_pendingEntries.TryRemove(entryGuid, out PendingEntry? nullableEntry) && nullableEntry is PendingEntry entry)
+            if (_bagsFeature.PendingEntries.TryRemove(entryGuid, out PendingEntry? nullableEntry) && nullableEntry is PendingEntry entry)
             {
                 if (_db.GetBag(Context.User.Id, entry.BagName) is not Bag bag)
                 {
