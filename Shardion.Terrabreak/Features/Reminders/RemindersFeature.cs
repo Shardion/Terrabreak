@@ -14,170 +14,152 @@ namespace Shardion.Terrabreak.Features.Reminders
         private readonly DiscordManager _discordManager;
         private readonly TimeoutManager _timeoutManager;
 
+        private static readonly RequestOptions DEFAULT_REQUEST_OPTIONS = new()
+        {
+            Timeout = Convert.ToInt32(TimeSpan.FromSeconds(5).TotalMilliseconds),
+        };
+
         public RemindersFeature(DiscordManager discordManager, TimeoutManager timeoutManager)
         {
             _discordManager = discordManager;
             _timeoutManager = timeoutManager;
             _timeoutManager.TimeoutExpired += async (timeout) =>
             {
-                try
+                if (timeout.Identifier != "reminder")
                 {
-                    if (timeout.Identifier != "reminder")
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    using JsonDocument document = JsonDocument.Parse(timeout.Data);
+                using JsonDocument document = JsonDocument.Parse(timeout.Data);
 
-                    if (document.RootElement.ValueKind != JsonValueKind.Object)
-                    {
-                        throw new JsonException("JSON is so badly malformed that I have no idea what to do with it");
-                    }
+                if (document.RootElement.ValueKind != JsonValueKind.Object)
+                {
+                    throw new JsonException("JSON is so badly malformed that I have no idea what to do with it");
+                }
 
-                    ulong? uid;
-                    if (!document.RootElement.TryGetProperty("UserId", out JsonElement unparsedUid) || unparsedUid.ValueKind != JsonValueKind.String || !ulong.TryParse(unparsedUid.ToString(), out ulong parsedUid))
-                    {
-                        uid = null;
-                    }
-                    else
-                    {
-                        uid = parsedUid;
-                    }
+                ulong? uid;
+                if (!document.RootElement.TryGetProperty("UserId", out JsonElement unparsedUid) || unparsedUid.ValueKind != JsonValueKind.String || !ulong.TryParse(unparsedUid.ToString(), out ulong parsedUid))
+                {
+                    uid = null;
+                }
+                else
+                {
+                    uid = parsedUid;
+                }
 
-                    ValueTask<IUser?> targetUserTask;
-                    if (uid is not ulong validUid)
-                    {
-                        targetUserTask = ValueTask.FromResult<IUser?>(null);
-                    }
-                    else
-                    {
-                        targetUserTask = _discordManager.Client.GetUserAsync(validUid);
-                    }
+                ValueTask<IUser?> targetUserTask;
+                if (uid is not ulong validUid)
+                {
+                    targetUserTask = ValueTask.FromResult<IUser?>(null);
+                }
+                else
+                {
+                    targetUserTask = _discordManager.Client.GetUserAsync(validUid, options: DEFAULT_REQUEST_OPTIONS);
+                }
 
-                    ulong? cid;
-                    if (!document.RootElement.TryGetProperty("ChannelId"u8, out JsonElement unparsedCid) || unparsedCid.ValueKind != JsonValueKind.String || !ulong.TryParse(unparsedCid.GetString(), out ulong parsedCid))
-                    {
-                        cid = null;
-                    }
-                    else
-                    {
-                        cid = parsedCid;
-                    }
+                ulong? cid;
+                if (!document.RootElement.TryGetProperty("ChannelId"u8, out JsonElement unparsedCid) || unparsedCid.ValueKind != JsonValueKind.String || !ulong.TryParse(unparsedCid.GetString(), out ulong parsedCid))
+                {
+                    cid = null;
+                }
+                else
+                {
+                    cid = parsedCid;
+                }
 
-                    ValueTask<IChannel?> targetChannelTask;
-                    if (cid is not ulong validCid)
-                    {
-                        targetChannelTask = ValueTask.FromResult<IChannel?>(null);
-                    }
-                    else
-                    {
-                        targetChannelTask = _discordManager.Client.GetChannelAsync(validCid);
-                    }
+                ValueTask<IChannel?> targetChannelTask;
+                if (cid is not ulong validCid)
+                {
+                    targetChannelTask = ValueTask.FromResult<IChannel?>(null);
+                }
+                else
+                {
+                    targetChannelTask = _discordManager.Client.GetChannelAsync(validCid, options: DEFAULT_REQUEST_OPTIONS);
+                }
 
-                    DateTimeOffset? startTime;
-                    if (!document.RootElement.TryGetProperty("StartTime"u8, out JsonElement unparsedStartTime))
+                DateTimeOffset? startTime;
+                if (!document.RootElement.TryGetProperty("StartTime"u8, out JsonElement unparsedStartTime))
+                {
+                    startTime = null;
+                }
+                else
+                {
+                    try
+                    {
+                        startTime = unparsedStartTime.Deserialize<DateTimeOffset>();
+                    }
+                    catch (JsonException)
                     {
                         startTime = null;
                     }
-                    else
+                }
+
+                string? reminderNote;
+                if (!document.RootElement.TryGetProperty("Note"u8, out JsonElement note) || note.ValueKind != JsonValueKind.String)
+                {
+                    reminderNote = null;
+                }
+                else
+                {
+                    reminderNote = note.GetString();
+                }
+
+                string reminderTimeLine;
+                if (startTime is not DateTimeOffset validStartTime)
+                {
+                    reminderTimeLine = "**Reminder from unknown time!**";
+                }
+                else
+                {
+                    reminderTimeLine = $"**Reminder from <t:{validStartTime.ToUnixTimeSeconds()}:F>**!";
+                }
+
+                string reminderTextLine;
+                if (reminderNote is null)
+                {
+                    reminderTextLine = "I failed to load the note for this reminder. Oops. You might be able to recover it by finding the original message.";
+                }
+                else
+                {
+                    reminderTextLine = $"> {reminderNote}";
+                }
+
+                // start preparing message content
+                AllowedMentions messageMentions = new();
+
+                string reminderMentionLine;
+                IUser? targetUser = await targetUserTask;
+                if (targetUser is null)
+                {
+                    reminderMentionLine = "*Unknown user. If you know who this reminder was for, ping them!*";
+                }
+                else
+                {
+                    reminderMentionLine = targetUser.Mention;
+                    messageMentions.UserIds.Add(targetUser.Id);
+                }
+
+                string messageContent = $"{reminderMentionLine}\n{reminderTimeLine}\n{reminderTextLine}";
+
+                IChannel? targetChannel = await targetChannelTask;
+                if (targetChannel is IMessageChannel validChannel)
+                {
+                    try
                     {
-                        try
+                        await validChannel.SendMessageAsync(messageContent, allowedMentions: messageMentions, options: DEFAULT_REQUEST_OPTIONS);
+                    }
+                    catch (HttpException channelDeliveryException)
+                    {
+                        if (channelDeliveryException.DiscordCode is null)
                         {
-                            startTime = unparsedStartTime.Deserialize<DateTimeOffset>();
+                            // not discord-side error, rethrow
+                            throw;
                         }
-                        catch (JsonException)
-                        {
-                            startTime = null;
-                        }
-                    }
-
-                    string? reminderNote;
-                    if (!document.RootElement.TryGetProperty("Note"u8, out JsonElement note) || note.ValueKind != JsonValueKind.String)
-                    {
-                        reminderNote = null;
-                    }
-                    else
-                    {
-                        reminderNote = note.GetString();
-                    }
-
-                    string reminderTimeLine;
-                    if (startTime is not DateTimeOffset validStartTime)
-                    {
-                        reminderTimeLine = "**Reminder from unknown time!**";
-                    }
-                    else
-                    {
-                        reminderTimeLine = $"**Reminder from <t:{validStartTime.ToUnixTimeSeconds()}:F>**!";
-                    }
-
-                    string reminderTextLine;
-                    if (reminderNote is null)
-                    {
-                        reminderTextLine = "I failed to load the note for this reminder. Oops. You might be able to recover it by finding the original message.";
-                    }
-                    else
-                    {
-                        reminderTextLine = $"> {reminderNote}";
-                    }
-
-                    // start preparing message content
-                    AllowedMentions messageMentions = new();
-
-                    string reminderMentionLine;
-                    IUser? targetUser = await targetUserTask;
-                    if (targetUser is null)
-                    {
-                        reminderMentionLine = "*Unknown user. If you know who this reminder was for, ping them!*";
-                    }
-                    else
-                    {
-                        reminderMentionLine = targetUser.Mention;
-                        messageMentions.UserIds.Add(targetUser.Id);
-                    }
-
-                    string messageContent = $"{reminderMentionLine}\n{reminderTimeLine}\n{reminderTextLine}";
-
-                    IChannel? targetChannel = await targetChannelTask;
-                    if (targetChannel is IMessageChannel validChannel)
-                    {
-                        try
-                        {
-                            await validChannel.SendMessageAsync(messageContent, allowedMentions: messageMentions);
-                        }
-                        catch (HttpException channelDeliveryException)
-                        {
-                            Log.Error($"Got error {nameof(channelDeliveryException)} while trying to send reminder {timeout.Id} to channel {targetChannel.Id}. Trying again in DMs.");
-                            Log.Error(channelDeliveryException.ToString());
-                            if (targetUser is not null)
-                            {
-                                try
-                                {
-                                    await targetUser.SendMessageAsync(messageContent, allowedMentions: messageMentions);
-                                }
-                                catch (HttpException dmsDeliveryException)
-                                {
-                                    Log.Error($"Got error {nameof(dmsDeliveryException)} while trying to send reminder {timeout.Id} to DMs of user {targetUser.Id}. Dropping!");
-                                }
-                            }
-                            else
-                            {
-                                Log.Error($"Dropped reminder {timeout.Id} as no valid non-erroring delivery area could be found!");
-                            }
-                        }
-                    }
-                    else
-                    {
+                        Log.Error($"Got following exception while trying to send reminder {timeout.Id} to channel {targetChannel.Id}. Trying again in DMs.");
+                        Log.Error(channelDeliveryException.ToString());
                         if (targetUser is not null)
                         {
-                            try
-                            {
-                                await targetUser.SendMessageAsync(messageContent, allowedMentions: messageMentions);
-                            }
-                            catch (HttpException dmsDeliveryException)
-                            {
-                                Log.Error($"Got error {nameof(dmsDeliveryException)} while trying to send reminder {timeout.Id} to DMs of user {targetUser.Id}. Dropping!");
-                            }
+                            await targetUser.SendMessageAsync(messageContent, allowedMentions: messageMentions, options: DEFAULT_REQUEST_OPTIONS);
                         }
                         else
                         {
@@ -185,9 +167,16 @@ namespace Shardion.Terrabreak.Features.Reminders
                         }
                     }
                 }
-                catch (Exception e)
+                else
                 {
-                    Log.Error(e.ToString());
+                    if (targetUser is not null)
+                    {
+                        await targetUser.SendMessageAsync(messageContent, allowedMentions: messageMentions, options: DEFAULT_REQUEST_OPTIONS);
+                    }
+                    else
+                    {
+                        Log.Error($"Dropped reminder {timeout.Id} as no valid delivery area could be found!");
+                    }
                 }
             };
         }

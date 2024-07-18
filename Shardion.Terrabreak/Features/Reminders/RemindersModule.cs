@@ -55,6 +55,7 @@ namespace Shardion.Terrabreak.Features.Reminders
                 ExpirationDate = offsettedTime,
                 Data = JsonSerializer.SerializeToUtf8Bytes(timerInfo),
                 ExpiryProcessed = false,
+                ShouldRetry = true,
             };
             _timeoutManager.BeginTimeout(timeout);
 

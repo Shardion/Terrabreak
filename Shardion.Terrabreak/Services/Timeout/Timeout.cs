@@ -13,6 +13,7 @@ namespace Shardion.Terrabreak.Services.Timeout
 
         public required DateTimeOffset ExpirationDate { get; set; }
         public bool ExpiryProcessed { get; set; }
+        public bool ShouldRetry { get; set; }
 
         public bool IsNear()
         {

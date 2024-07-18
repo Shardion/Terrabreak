@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using Shardion.Terrabreak.Services.Database;
 
 namespace Shardion.Terrabreak.Services.Timeout
@@ -44,11 +45,29 @@ namespace Shardion.Terrabreak.Services.Timeout
                     {
                         if (timeout.ExpirationDate < DateTimeOffset.UtcNow)
                         {
-                            Task.Run(() =>
+                            Task.Run(async () =>
                             {
-                                TimeoutExpired?.Invoke(timeout);
-                            });
-                            timeout.ExpiryProcessed = true;
+                                if (TimeoutExpired?.Invoke(timeout) is not Task invocationTask)
+                                {
+                                    return;
+                                }
+                                try
+                                {
+                                    await invocationTask;
+                                    if (invocationTask.IsCompletedSuccessfully)
+                                    {
+                                        timeout.ExpiryProcessed = true;
+                                    }
+                                    else
+                                    {
+                                        FailTimeout(timeout, invocationTask.Exception);
+                                    }
+                                }
+                                catch (AggregateException e)
+                                {
+                                    FailTimeout(timeout, e);
+                                }
+                            }).Wait(CancellationToken.None); // TODO: This is how to cause stalls 101, but I don't have a better solution
                         }
                         else
                         {
@@ -117,6 +136,20 @@ namespace Shardion.Terrabreak.Services.Timeout
                 _loadingThreadSleepTask = Task.Delay(TimeSpan.FromMinutes(15));
                 _loadingThreadSleepTask.Wait();
             }
+        }
+
+        private static Timeout FailTimeout(Timeout timeout, Exception? e)
+        {
+            if (!timeout.ShouldRetry)
+            {
+                Log.Error("Unhandled exception while processing timeout. This timeout will not be retried:\n{0}", e);
+                return timeout;
+            }
+            Log.Error("Unhandled exception while processing timeout. This timeout will be retried in 30 seconds:\n{0}", e);
+            // Linear backoff
+            // Maybe replace with exponential and low cap (5 minutes?)
+            timeout.ExpirationDate = timeout.ExpirationDate.AddSeconds(30);
+            return timeout;
         }
 
         public Timeout? GetTimeout(Guid timeoutGuid)
