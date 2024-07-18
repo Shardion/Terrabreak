@@ -19,87 +19,17 @@ namespace Shardion.Terrabreak.Features.OptionsManagement
         [SlashCommand("options", "Views and modifies options.")]
         public async Task Options()
         {
-            EmbedBuilder embed = _identity.GetEmbedTemplate();
-            embed.Color = new Color(0xED4245);
-            embed.Title = "Dummy category";
-            embed.Description = "__Page 1/1__\n1. Filler\n2. Filler\n3. Filler";
-            embed.Footer = new()
-            {
-                Text = "Currently viewing Global options",
-                IconUrl = "https://anomaly.tail354c3.ts.net/assets/bulb.png"
-            };
-
-            SelectMenuBuilder dropdown = new()
-            {
-                CustomId = "category"
-            };
-            dropdown.AddOption("Dummy category", "Hi!");
-            dropdown.AddOption("Another dummy category", "Lea!");
-            dropdown.AddOption("Yet another dummy category", "Bye!");
-
-            ActionRowBuilder dropdownRow = new();
-            dropdownRow.AddComponent(dropdown.Build());
-
-            ButtonBuilder modifyButton = new()
-            {
-                Label = "Modify",
-                CustomId = "modify",
-                Style = ButtonStyle.Secondary,
-            };
-
-            ButtonBuilder previousButton = new()
-            {
-                Emote = new Emoji("⬆"),
-                CustomId = "previous",
-                IsDisabled = true,
-                Style = ButtonStyle.Secondary,
-            };
-
-            ButtonBuilder nextButton = new()
-            {
-                Emote = new Emoji("⬇"),
-                CustomId = "next",
-                IsDisabled = true,
-                Style = ButtonStyle.Secondary,
-            };
-
-            ActionRowBuilder navigationRow = new();
-            navigationRow.AddComponent(modifyButton.Build());
-            navigationRow.AddComponent(previousButton.Build());
-            navigationRow.AddComponent(nextButton.Build());
-
-            ButtonBuilder userButton = new()
-            {
-                Label = "User",
-                CustomId = "user",
-                Style = ButtonStyle.Success,
-            };
-
-            ButtonBuilder serverButton = new()
-            {
-                Label = "Server",
-                CustomId = "server",
-                Style = ButtonStyle.Primary,
-            };
-
-            ButtonBuilder globalButton = new()
-            {
-                Label = "Global",
-                CustomId = "global",
-                Style = ButtonStyle.Danger,
-            };
-
-            ActionRowBuilder contextRow = new();
-            contextRow.AddComponent(userButton.Build());
-            contextRow.AddComponent(serverButton.Build());
-            contextRow.AddComponent(globalButton.Build());
-
-            ComponentBuilder components = new();
-            components.AddRow(dropdownRow);
-            components.AddRow(navigationRow);
-            components.AddRow(contextRow);
-
-            await Context.Interaction.RespondAsync("", embed: embed.Build(), components: components.Build());
+            await Context.Interaction.RespondAsync(
+            "Greetings from shardion! Because of the immense complexity of implementing " +
+            "real menuing, and that it was blocking me from adding Automute, this command " +
+            "has been hardcoded to handle exclusively server-wide settings for Automute. " +
+            "This was done as a measure to reach feature parity with Achromatic sooner.\n\n" +
+            "- To enable automute, use `/options automute-enabled`.\n" +
+            "- To change the reaction emoji, use `/options automute-emoji`.\n" +
+            "- To change the amount of reactions required, use `/options automute-reactions`.\n\n" +
+            "Be warned, the emoji option does little-to-no validation, " +
+            "meaning you can add emojis that don't exist and effectively disable Automute. "
+            );
         }
     }
 }
