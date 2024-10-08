@@ -46,7 +46,7 @@ namespace Shardion.Terrabreak.Features.CobaltDownload
             // todo: bad direct usage of httpclient, replace with factory in feature class
             using HttpClient http = new();
             http.DefaultRequestHeaders.Add("Accept", "application/json");
-            // http.DefaultRequestHeaders.Add("Content-Type", "application/json");
+            http.DefaultRequestHeaders.Add("User-Agent", "Project Terrabreak");
             if (options.CobaltAPIKey is not null)
             {
                 http.DefaultRequestHeaders.Add("Authorization", $"api-key {options.CobaltAPIKey}");
