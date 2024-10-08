@@ -31,7 +31,7 @@ namespace Shardion.Terrabreak.Services.Discord
 
             DiscordSocketConfig socketConfig = new()
             {
-                GatewayIntents = GatewayIntents.GuildPresences | GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.DirectMessages | GatewayIntents.GuildMessageReactions,
+                GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.DirectMessages | GatewayIntents.GuildMessageReactions,
 #if DEBUG
                 LogLevel = LogSeverity.Verbose,
 #endif
