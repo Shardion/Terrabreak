@@ -17,9 +17,9 @@ namespace Shardion.Terrabreak.Services.Identity
 
         public string[]? Splashes { get; set; } = null;
 
-        public ulong? PrimaryDeveloperID { get; set; } = null;
-        public ulong? PrimaryDevelopmentServerID { get; set; } = null;
-        public ulong[] DeveloperIDs { get; set; } = [];
-        public ulong[] DevelopmentServerIDs { get; set; } = [];
+        public ulong? PrimaryInstanceOwnerId { get; set; } = null;
+        public ulong? PrimaryDevelopmentServerId { get; set; } = null;
+        public ulong[] InstanceOwnerIds { get; set; } = [];
+        public ulong[] DevelopmentServerIds { get; set; } = [];
     }
 }

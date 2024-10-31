@@ -19,7 +19,7 @@ namespace Shardion.Terrabreak.Services.Interactions
                 return Task.FromResult(PreconditionResult.FromError(new NullReferenceException("options")));
             }
 
-            if (options.Get<IdentityOptions>().DeveloperIDs.Contains(context.User.Id))
+            if (options.Get<IdentityOptions>().InstanceOwnerIds.Contains(context.User.Id))
             {
                 return Task.FromResult(PreconditionResult.FromSuccess());
             }

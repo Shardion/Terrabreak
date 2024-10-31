@@ -48,7 +48,7 @@ namespace Shardion.Terrabreak.Services.Interactions
                 if (!result.IsSuccess && result.Error is not null)
                 {
                     string primaryDevSection;
-                    if (_optionsManager.Get<IdentityOptions>().PrimaryDeveloperID is ulong primaryDevId)
+                    if (_optionsManager.Get<IdentityOptions>().PrimaryInstanceOwnerId is ulong primaryDevId)
                     {
                         primaryDevSection = $" Please ping <@{primaryDevId}> for assistance.";
                     }
