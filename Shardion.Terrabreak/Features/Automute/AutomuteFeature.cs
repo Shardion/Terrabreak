@@ -36,6 +36,12 @@ namespace Shardion.Terrabreak.Features.Automute
                     return;
                 }
 
+                if (reaction.Emote.Name != automuteOptions.Emoji)
+                {
+                    Log.Debug("Did not handle reaction on message {0}, reaction emoji is not the automute emoji", reaction.MessageId);
+                    return;
+                }
+
                 MessageAutomuteStatus automuteStatus = IncrementCounterForValidMessage(reaction);
                 Log.Debug("Handling reaction on message {0}", reaction.MessageId);
                 if (automuteStatus.MuteReactors.Count >= automuteOptions.ReactionsRequired)
