@@ -1,11 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0-preview-alpine AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build-env
 WORKDIR /
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 COPY . ./
 RUN dotnet restore
 RUN dotnet publish Shardion.Terrabreak/ -c Release -o /out
 
-FROM mcr.microsoft.com/dotnet/runtime:10.0-preview-alpine
+FROM mcr.microsoft.com/dotnet/runtime:10.0-preview
 WORKDIR /
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 USER $APP_UID
