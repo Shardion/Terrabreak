@@ -29,4 +29,4 @@ truth of the application.
 Dynamic options are a lot more complicated. They are built to be modifiable at run-time, and viewed
 or even modified by users, and can exist on per-server or per-user levels. They are intended to be
 used for anything that is not a core truth of the application, like the number of reactions required to
-mute someone with the Votemute feature, or the color used by default in embeds.
+mute someone with the Automute feature, or the color used by default in embeds.

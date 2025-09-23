@@ -213,8 +213,8 @@ namespace Shardion.Terrabreak.Services.Timeout
 
         public Task StartAsync()
         {
-            _timeoutLoadingThread.Start();
-            _timeoutExpiryThread.Start();
+            /*_timeoutLoadingThread.Start();
+            _timeoutExpiryThread.Start();*/
             return Task.CompletedTask;
         }
 
