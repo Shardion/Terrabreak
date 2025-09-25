@@ -15,7 +15,11 @@ namespace Shardion.Terrabreak.Features.Reminders;
 public class RemindersModule(ISchedulerFactory schedulerFactory, MenuManager menuManager)
     : TerrabreakApplicationCommandModule(menuManager)
 {
-    [SlashCommand("reminders", "List and delete reminders.")]
+    [SlashCommand("reminders", "List and delete reminders.",
+        Contexts =
+        [
+            InteractionContextType.BotDMChannel, InteractionContextType.DMChannel, InteractionContextType.Guild
+        ])]
     public async Task Reminders()
     {
         await ActivateMenuAsync(new RemindersMenu(schedulerFactory, Context.Interaction.User.Id)

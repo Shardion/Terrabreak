@@ -11,7 +11,11 @@ namespace Shardion.Terrabreak.Features.Documentation;
 public class DocumentationModule(DocumentationManager documentationManager, IdentityOptions identity)
     : ApplicationCommandModule<ApplicationCommandContext>
 {
-    [SlashCommand("changelog", "What's new?")]
+    [SlashCommand("changelog", "What's new?",
+        Contexts =
+        [
+            InteractionContextType.BotDMChannel, InteractionContextType.DMChannel, InteractionContextType.Guild
+        ])]
     public Task Changelog(
         [SlashCommandParameter(Description = "The version associated with the changelog to view.")]
         string? version = null
@@ -42,7 +46,11 @@ public class DocumentationModule(DocumentationManager documentationManager, Iden
         ));
     }
 
-    [SlashCommand("user-guide", "Learn how to use the app!")]
+    [SlashCommand("user-guide", "Learn how to use the app!",
+        Contexts =
+        [
+            InteractionContextType.BotDMChannel, InteractionContextType.DMChannel, InteractionContextType.Guild
+        ])]
     public Task UserGuide()
     {
         if (documentationManager.UserGuide is not JsonComponent component)

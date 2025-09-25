@@ -22,7 +22,11 @@ namespace Shardion.Terrabreak.Features.CobaltDownload;
 public class CobaltDownloadModule(OptionsManager optionsManager)
     : ApplicationCommandModule<ApplicationCommandContext>
 {
-    [MessageCommand("Download Media")]
+    [MessageCommand("Download Media",
+        Contexts =
+        [
+            InteractionContextType.BotDMChannel, InteractionContextType.DMChannel, InteractionContextType.Guild
+        ])]
     public async Task DownloadMedia(RestMessage message)
     {
         CobaltDownloadOptions options = optionsManager.Get<CobaltDownloadOptions>();

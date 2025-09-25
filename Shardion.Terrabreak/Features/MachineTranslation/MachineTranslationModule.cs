@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using GTranslate.Results;
+using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 
@@ -9,13 +10,21 @@ namespace Shardion.Terrabreak.Features.MachineTranslation;
 public class MachineTranslationModule(MachineTranslationManager mtlManager)
     : ApplicationCommandModule<ApplicationCommandContext>
 {
-    [MessageCommand("Translate")]
+    [MessageCommand("Translate",
+        Contexts =
+        [
+            InteractionContextType.BotDMChannel, InteractionContextType.DMChannel, InteractionContextType.Guild
+        ])]
     public Task TranslateMessage(RestMessage message)
     {
         return Translate(message.Content);
     }
 
-    [SlashCommand("translate", "Translates the provided text with a machine translation service.")]
+    [SlashCommand("translate", "Translates the provided text with a machine translation service.",
+        Contexts =
+        [
+            InteractionContextType.BotDMChannel, InteractionContextType.DMChannel, InteractionContextType.Guild
+        ])]
     public async Task Translate(
         [SlashCommandParameter(Description = "The text to translate.")]
         string text

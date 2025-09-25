@@ -14,7 +14,11 @@ namespace Shardion.Terrabreak.Features.Reminders;
 
 public class RemindModule(ISchedulerFactory schedulerFactory) : ApplicationCommandModule<ApplicationCommandContext>
 {
-    [SlashCommand("remind", "Pings you at a specified time in the future with a specified note.")]
+    [SlashCommand("remind", "Pings you at a specified time in the future with a specified note.",
+        Contexts =
+        [
+            InteractionContextType.BotDMChannel, InteractionContextType.DMChannel, InteractionContextType.Guild
+        ])]
     public async Task CreateReminder(
         [SlashCommandParameter(Description = "The note that you will be reminded with.")]
         string note,

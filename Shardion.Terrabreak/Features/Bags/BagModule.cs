@@ -14,7 +14,8 @@ using Shardion.Terrabreak.Services.Menuing;
 
 namespace Shardion.Terrabreak.Features.Bags;
 
-[SlashCommand("bag", "Grab bags of arbitrary text, which can be pulled from randomly.")]
+[SlashCommand("bag", "Grab bags of arbitrary text, which can be pulled from randomly.",
+    Contexts = [InteractionContextType.BotDMChannel, InteractionContextType.DMChannel, InteractionContextType.Guild])]
 public class BagModule(
     TerrabreakDatabaseContext db,
     IDbContextFactory<TerrabreakDatabaseContext> dbFactory,
