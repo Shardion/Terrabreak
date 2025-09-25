@@ -8,7 +8,7 @@
         <LangVersion>preview</LangVersion>
         <!-- container publish settings -->
         <ContainerRepository>shardion/terrabreak</ContainerRepository>
-        <ContainerFamily>alpine</ContainerFamily>
+        <ContainerBaseImage>mcr.microsoft.com/dotnet/nightly/runtime:10.0-alpine</ContainerBaseImage>
     </PropertyGroup>
 
     <ItemGroup>
