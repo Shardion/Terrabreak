@@ -1,9 +1,8 @@
-namespace Shardion.Terrabreak.Services.Options
+namespace Shardion.Terrabreak.Services.Options;
+
+public enum OptionsAccessor
 {
-    public enum OptionsAccessor
-    {
-        Bot,
-        Server,
-        User,
-    }
+    Bot,
+    Server,
+    User
 }

@@ -1,112 +1,98 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Shardion.Terrabreak.Services.Database;
 
-namespace Shardion.Terrabreak.Features.Bags
+namespace Shardion.Terrabreak.Features.Bags;
+
+public static class BagDbContextExtensions
 {
-    public static class BagDbContextExtensions
+    public static Bag CreateBag(this DbContext context, ulong userId, string name)
     {
-        public static Bag CreateBag(this TerrabreakDatabaseContext context, ulong userId, string name, bool save = true)
+        Bag bag = new()
         {
-            Bag bag = new()
-            {
-                Name = name,
-                OwnerId = userId,
-                Entries = [],
-            };
-            context.Add(bag);
-            if (save)
-            {
-                context.SaveChanges();
-            }
-            return bag;
-        }
+            Name = name,
+            OwnerId = userId
+        };
+        context.Add(bag);
+        return bag;
+    }
 
-        public static Bag? GetBag(this TerrabreakDatabaseContext context, ulong userId, string name)
+    public static async Task<Bag> CreateBagAsync(this DbContext context, ulong userId, string name,
+        CancellationToken token = default)
+    {
+        Bag bag = new()
         {
-            return context.Set<Bag>().Where(bag => bag.Name == name && bag.OwnerId == userId).FirstOrDefault();
-        }
+            Name = name,
+            OwnerId = userId
+        };
+        await context.AddAsync(bag, token);
+        return bag;
+    }
 
-        public static bool DeleteBag(this TerrabreakDatabaseContext context, ulong userId, string name, bool save = true)
-        {
-            if (GetBag(context, userId, name) is not Bag bag)
-            {
-                return false;
-            }
-            bool successful = DeleteBag(context, bag, save: false);
-            if (save)
-            {
-                context.SaveChanges();
-            }
-            return successful;
-        }
+    public static Bag? GetBag(this DbContext context, ulong userId, string name)
+    {
+        return context.Set<Bag>().FirstOrDefault(bag => bag.Name == name && bag.OwnerId == userId);
+    }
 
-        public static bool DeleteBag(this TerrabreakDatabaseContext context, Bag bag, bool save = true)
-        {
-            context.Remove(bag);
-            if (save)
-            {
-                context.SaveChanges();
-            }
-            return true;
-        }
+    public static bool DeleteBag(this DbContext context, ulong userId, string name)
+    {
+        if (GetBag(context, userId, name) is not Bag bag) return false;
+        bool successful = DeleteBag(context, bag);
+        return successful;
+    }
 
-        public static bool AddToBag(this TerrabreakDatabaseContext context, ulong userId, string name, string entry, bool save = true)
-        {
-            if (GetBag(context, userId, name) is not Bag bag)
-            {
-                return false;
-            }
-            bool successful = AddToBag(context, bag, entry, save: false);
-            if (save)
-            {
-                context.SaveChanges();
-            }
-            return successful;
-        }
+    public static bool DeleteBag(this DbContext context, Bag bag)
+    {
+        context.Remove(bag);
+        return true;
+    }
 
-        public static bool AddToBag(this TerrabreakDatabaseContext context, Bag bag, string entry, bool save = true)
-        {
-            bag.Entries.Add(entry);
-            context.Update(bag);
-            if (save)
-            {
-                context.SaveChanges();
-            }
-            return true;
-        }
+    public static bool AddToBag(this DbContext context, ulong userId, string name, string entry)
+    {
+        if (GetBag(context, userId, name) is not Bag bag) return false;
+        bool successful = AddToBag(context, bag, entry);
+        return successful;
+    }
 
-        public static bool RemoveFromBag(this TerrabreakDatabaseContext context, ulong userId, string name, string entry, bool save = true)
-        {
-            if (GetBag(context, userId, name) is not Bag bag)
+    public static bool AddToBag(this DbContext context, Bag bag, string entry)
+    {
+        bag.Entries.Add(new BagEntry
             {
-                return false;
+                Text = entry,
+                Bag = bag
             }
-            bool successful = RemoveFromBag(context, bag, entry, save: false);
-            if (save)
-            {
-                context.SaveChanges();
-            }
-            return successful;
-        }
+        );
+        context.Update(bag);
+        return true;
+    }
 
-        public static bool RemoveFromBag(this TerrabreakDatabaseContext context, Bag bag, string entry, bool save = true)
-        {
-            if (!bag.Entries.Remove(entry))
-            {
-                return false;
-            }
-            context.Update(bag);
-            if (save)
-            {
-                context.SaveChanges();
-            }
-            return true;
-        }
+    public static bool AddToBag(this DbContext context, Bag bag, BagEntry entry)
+    {
+        bag.Entries.Add(entry);
+        context.Update(bag);
+        return true;
+    }
 
-        public static IEnumerable<Bag> FindBags(this TerrabreakDatabaseContext context, ulong userId)
-        {
-            return context.Set<Bag>().Where(bag => bag.OwnerId == userId);
-        }
+    public static bool RemoveFromBag(this DbContext context, ulong userId, string name, BagEntry entry)
+    {
+        if (GetBag(context, userId, name) is not { } bag) return false;
+        bool successful = RemoveFromBag(context, bag, entry);
+        return successful;
+    }
+
+    public static bool RemoveFromBag(this DbContext context, Bag bag, BagEntry entry)
+    {
+        if (!bag.Entries.Remove(entry)) return false;
+        context.Update(bag);
+        return true;
+    }
+
+    public static BagEntry? GetEntry(this DbContext context, Guid entryId)
+    {
+        return context.Set<BagEntry>().FirstOrDefault(entry => entry.Id == entryId);
     }
 }

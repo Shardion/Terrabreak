@@ -1,10 +1,9 @@
-namespace Shardion.Terrabreak.Services.Options
+namespace Shardion.Terrabreak.Services.Options;
+
+public enum OptionsAccessibility
 {
-    public enum OptionsAccessibility
-    {
-        None,
-        Read,
-        Write,
-        ReadWrite,
-    }
+    None,
+    Read,
+    Write,
+    ReadWrite
 }

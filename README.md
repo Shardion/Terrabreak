@@ -1,6 +1,6 @@
 # Project Terrabreak
 
-A heavily-reorganized port of Project Achromatic to Discord.NET.
+A heavily-reorganized port of Project Achromatic to NetCord.
 Often called simply "Terrabreak".
 
 ## Structure
@@ -11,7 +11,7 @@ inside `Shardion.Terrabreak/Services/`.
 These services implement core functionality of the application, like providing its branding to features,
 supporting a database, and providing access to a Discord client.
 
-The structure placed on top of the metaphorical service foundation is features; that is, anything in
+Services can be used as dependencies by the user-facing features; that is, anything in
 `Shardion.Terrabreak/Features/`. Services ultimately exist to support features, and features are what
 is visible to the end users.
 

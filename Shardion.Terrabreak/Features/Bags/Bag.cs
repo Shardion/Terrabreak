@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Shardion.Terrabreak.Features.Bags
+namespace Shardion.Terrabreak.Features.Bags;
+
+public class Bag
 {
-    public class Bag
-    {
-        [Key]
-        public Guid Id { get; set; }
+    [Key] public Guid Id { get; init; }
+    public required string Name { get; init; }
+    public required ulong? OwnerId { get; init; }
 
-        public required string Name { get; set; }
-        public required ulong? OwnerId { get; set; }
-        public required List<string> Entries { get; set; }
-    }
+    public ICollection<BagEntry> Entries { get; init; } = [];
 }

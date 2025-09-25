@@ -1,8 +1,7 @@
-namespace Shardion.Terrabreak.Features.CobaltDownload
+namespace Shardion.Terrabreak.Features.CobaltDownload;
+
+public sealed class CobaltErrorContext
 {
-    public sealed class CobaltErrorContext
-    {
-        public string? Service { get; init; }
-        public int? Limit { get; init; }
-    }
+    public string? Service { get; init; }
+    public int? Limit { get; init; }
 }

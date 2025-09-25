@@ -1,36 +1,30 @@
 using System.Threading.Tasks;
-using Discord;
-using Shardion.Terrabreak.Services.Options;
+using Quartz;
 
-namespace Shardion.Terrabreak.Services.Identity
+namespace Shardion.Terrabreak.Services.Identity;
+
+public class IdentityManager(ISchedulerFactory schedulerFactory, IdentityOptions options) : ITerrabreakService
 {
-    public class IdentityManager : ITerrabreakService
+    public IdentityOptions Options { get; } = options;
+
+    public string? LastSplash { get; set; } = null;
+
+    public async Task StartAsync()
     {
-        private readonly OptionsManager _options;
+        // TODO: Ideally would never touch the DB, but could be made better by only adding the jobs if it doesn't exist
+        IScheduler scheduler = await schedulerFactory.GetScheduler();
+        await scheduler.DeleteJob(new JobKey("changeStatusJob", "statusRotation"));
+        IJobDetail job = JobBuilder.Create<ChangeStatusJob>()
+            .WithIdentity("changeStatusJob", "statusRotation")
+            .Build();
+        ITrigger trigger = TriggerBuilder.Create()
+            .WithIdentity("changeStatusTrigger", "statusRotation")
+            .StartNow()
+            .WithSimpleSchedule(x => x
+                .WithIntervalInMinutes(30)
+                .RepeatForever())
+            .Build();
 
-        public IdentityManager(OptionsManager options)
-        {
-            _options = options;
-        }
-
-        public EmbedBuilder GetEmbedTemplate()
-        {
-            if (_options.Get<IdentityOptions>() is IdentityOptions identity)
-            {
-                return new EmbedBuilder()
-                {
-                    Color = identity.BotColor,
-                };
-            }
-            else
-            {
-                return new EmbedBuilder();
-            }
-        }
-
-        public Task StartAsync()
-        {
-            return Task.CompletedTask;
-        }
+        await scheduler.ScheduleJob(job, trigger);
     }
 }

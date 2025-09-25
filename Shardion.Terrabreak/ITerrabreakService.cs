@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
 
-namespace Shardion.Terrabreak
+namespace Shardion.Terrabreak;
+
+public interface ITerrabreakService
 {
-    public interface ITerrabreakService
-    {
-        public Task StartAsync();
-    }
+    public Task StartAsync();
 }

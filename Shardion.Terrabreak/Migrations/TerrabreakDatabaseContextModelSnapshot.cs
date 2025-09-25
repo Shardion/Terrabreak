@@ -15,16 +15,12 @@ namespace Shardion.Terrabreak.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.0-preview.3.24172.4");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.0-rc.1.25451.107");
 
             modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.Bag", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Entries")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -39,32 +35,40 @@ namespace Shardion.Terrabreak.Migrations
                     b.ToTable("Bag");
                 });
 
-            modelBuilder.Entity("Shardion.Terrabreak.Services.Timeout.Timeout", b =>
+            modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.BagEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<byte[]>("Data")
-                        .IsRequired()
-                        .HasColumnType("BLOB");
-
-                    b.Property<DateTimeOffset>("ExpirationDate")
+                    b.Property<Guid>("BagId")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("ExpiryProcessed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Identifier")
+                    b.Property<string>("Text")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("ShouldRetry")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Timeout");
+                    b.HasIndex("BagId");
+
+                    b.ToTable("BagEntry");
+                });
+
+            modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.BagEntry", b =>
+                {
+                    b.HasOne("Shardion.Terrabreak.Features.Bags.Bag", "Bag")
+                        .WithMany("Entries")
+                        .HasForeignKey("BagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bag");
+                });
+
+            modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.Bag", b =>
+                {
+                    b.Navigation("Entries");
                 });
 #pragma warning restore 612, 618
         }

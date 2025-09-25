@@ -1,8 +1,7 @@
-namespace Shardion.Terrabreak.Services.Options
+namespace Shardion.Terrabreak.Services.Options;
+
+public interface IDynamicOptions
 {
-    public interface IDynamicOptions
-    {
-        public string SectionName { get; }
-        public OptionsPermissions Permissions { get; }
-    }
+    public string SectionName { get; }
+    public OptionsPermissions Permissions { get; }
 }

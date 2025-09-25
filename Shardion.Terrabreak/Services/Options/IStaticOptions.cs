@@ -1,7 +1,6 @@
-namespace Shardion.Terrabreak.Services.Options
+namespace Shardion.Terrabreak.Services.Options;
+
+public interface IStaticOptions
 {
-    public interface IStaticOptions
-    {
-        public string SectionName { get; }
-    }
+    public string SectionName { get; }
 }

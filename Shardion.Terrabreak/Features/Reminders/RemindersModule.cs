@@ -1,65 +1,27 @@
-using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Text.Json;
+using System.Text;
 using System.Threading.Tasks;
-using Discord;
-using Discord.Interactions;
-using Shardion.Terrabreak.Services.Timeout;
+using NetCord;
+using NetCord.Rest;
+using NetCord.Services.ApplicationCommands;
+using Quartz;
+using Quartz.Impl.Matchers;
+using Shardion.Terrabreak.Services.Menuing;
 
-namespace Shardion.Terrabreak.Features.Reminders
+namespace Shardion.Terrabreak.Features.Reminders;
+
+public class RemindersModule(ISchedulerFactory schedulerFactory, MenuManager menuManager)
+    : TerrabreakApplicationCommandModule(menuManager)
 {
-    [CommandContextType(InteractionContextType.BotDm, InteractionContextType.PrivateChannel, InteractionContextType.Guild)]
-    [IntegrationType(ApplicationIntegrationType.UserInstall, ApplicationIntegrationType.GuildInstall)]
-    public class RemindersModule : InteractionModuleBase
+    [SlashCommand("reminders", "List and delete reminders.")]
+    public async Task Reminders()
     {
-        private readonly TimeoutManager _timeoutManager;
-
-        public RemindersModule(TimeoutManager timeoutManager)
-        {
-            _timeoutManager = timeoutManager;
-        }
-
-        [SlashCommand("remind", "Pings you at a specified time in the future with a specified note.")]
-        public async Task CreateReminder(
-            [Summary(description: "The note that you will be pinged with.")] string note,
-            [Summary(description: "A number of days to add to the expiry time.")] int days = 0,
-            [Summary(description: "A number of hours to add to the expiry time.")] int hours = 0,
-            [Summary(description: "A number of minutes to add to the expiry time.")] int minutes = 0,
-            [Summary(description: "A number of seconds to add to the expiry time.")] int seconds = 0
-        )
-        {
-            TimeSpan offset = new(days, hours, minutes, seconds);
-            if (offset <= TimeSpan.Zero)
+        await ActivateMenuAsync(new RemindersMenu(schedulerFactory, Context.Interaction.User.Id)
             {
-                await RespondAsync("Invalid time.", ephemeral: true);
-                return;
+                AllowedUsers = new HashSet<ulong>([Context.Interaction.User.Id])
             }
-
-            DateTimeOffset offsettedTime = DateTimeOffset.UtcNow.Add(offset);
-
-            ReminderInfo timerInfo = new()
-            {
-                Note = note,
-                StartTime = DateTimeOffset.UtcNow,
-                UserId = Context.User.Id.ToString(CultureInfo.InvariantCulture),
-            };
-
-            if (Context.Channel is ITextChannel)
-            {
-                timerInfo.ChannelId = Context.Channel.Id.ToString(CultureInfo.InvariantCulture);
-            }
-
-            Timeout timeout = new()
-            {
-                Identifier = "reminder",
-                ExpirationDate = offsettedTime,
-                Data = JsonSerializer.SerializeToUtf8Bytes(timerInfo),
-                ExpiryProcessed = false,
-                ShouldRetry = true,
-            };
-            _timeoutManager.BeginTimeout(timeout);
-
-            await RespondAsync($"Reminder set for **<t:{offsettedTime.ToUnixTimeSeconds()}:F>**!\n> {note}");
-        }
+        );
     }
 }
