@@ -11,7 +11,7 @@ using Shardion.Terrabreak.Services.Database;
 namespace Shardion.Terrabreak.Migrations
 {
     [DbContext(typeof(TerrabreakDatabaseContext))]
-    [Migration("20251030050603_ShusoDivineReunion")]
+    [Migration("20251030054357_ShusoDivineReunion")]
     partial class ShusoDivineReunion
     {
         /// <inheritdoc />
