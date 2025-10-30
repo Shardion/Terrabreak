@@ -19,12 +19,5 @@ public abstract class TerrabreakApplicationCommandModule(MenuManager menuManager
         CancellationToken cancellationToken = default)
     {
         await menu.OnCreate(Context, menuManager.ActivateMenu(menu));
-        /*InteractionMessageProperties finalMessage = new InteractionMessageProperties()
-            .WithAttachments(message.Attachments)
-            .WithComponents(message.Components)
-            .WithFlags(message.Flags | MessageFlags.IsComponentsV2)
-            .WithAllowedMentions(message.AllowedMentions);
-
-        await RespondAsync(InteractionCallback.Message(finalMessage), cancellationToken: cancellationToken, withResponse: withResponse, properties: properties);*/
     }
 }

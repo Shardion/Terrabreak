@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Quartz;
 
@@ -26,5 +27,14 @@ public class IdentityManager(ISchedulerFactory schedulerFactory, IdentityOptions
             .Build();
 
         await scheduler.ScheduleJob(job, trigger);
+    }
+
+    public string GetAccessDeniedResponse()
+    {
+        if (Options.AccessDeniedResponses is string[] deniedResponses)
+        {
+            return deniedResponses[Random.Shared.Next(deniedResponses.Length)];
+        }
+        return "Access denied.";
     }
 }

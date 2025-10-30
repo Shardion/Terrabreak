@@ -40,6 +40,7 @@ public class RemindersMenu(ISchedulerFactory schedulerFactory, ulong targetUser)
         if (PageNumber < 0) PageNumber = 0;
 
         if (totalPages <= 0)
+        {
             return new MenuMessage([
                 new ComponentContainerProperties()
                     .WithComponents([
@@ -47,6 +48,7 @@ public class RemindersMenu(ISchedulerFactory schedulerFactory, ulong targetUser)
                         new TextDisplayProperties("-# (you have no reminders)")
                     ])
             ]);
+        }
 
         IEnumerable<JobKey> pageReminders = jobKeys.Skip(PageNumber * PageEntryCount).Take(10);
         List<IComponentContainerComponentProperties> components = [];
@@ -56,7 +58,16 @@ public class RemindersMenu(ISchedulerFactory schedulerFactory, ulong targetUser)
             {
                 components.Add(
                     new TextDisplayProperties(
-                        "- An error occurred while retrieving this entry <:ech:1417758642186485770>"));
+                        "- An error occurred while retrieving this entry's details <:ech:1417758642186485770>"));
+                continue;
+            }
+
+            IReadOnlyCollection<ITrigger> jobTriggers = await scheduler.GetTriggersOfJob(jobKey);
+            if (jobTriggers.FirstOrDefault() is not ITrigger jobTrigger)
+            {
+                components.Add(
+                    new TextDisplayProperties(
+                        "- An error occurred while retrieving this entry's activation info <:ech:1417758642186485770>"));
                 continue;
             }
 
@@ -66,7 +77,7 @@ public class RemindersMenu(ISchedulerFactory schedulerFactory, ulong targetUser)
                     ButtonStyle.Danger),
                 [
                     new TextDisplayProperties(
-                        $"- <t:{jobDetail.JobDataMap["StartingUnixTimeSeconds"]}:F>\n>>> {jobDetail.JobDataMap["Note"]}")
+                        $"- <t:{jobTrigger.StartTimeUtc.ToUnixTimeSeconds()}:F>\n>>> {jobDetail.JobDataMap["Note"]}")
                 ]
             ));
         }
@@ -112,14 +123,15 @@ public class RemindersMenu(ISchedulerFactory schedulerFactory, ulong targetUser)
 
     public override async Task OnButton(ButtonInteractionContext context)
     {
+        List<Task> tasks = [];
         string[] customIdFragments = context.Interaction.Data.CustomId.Split(":");
         string secondLastCustomIdFragment = customIdFragments[^2];
         string lastCustomIdFragment = customIdFragments[^1];
         if (secondLastCustomIdFragment.StartsWith("delete"))
         {
             IScheduler scheduler = await schedulerFactory.GetScheduler();
-            await scheduler.DeleteJob(new JobKey(lastCustomIdFragment,
-                $"remindersFor{targetUser.ToString(CultureInfo.InvariantCulture)}"));
+            tasks.Add(scheduler.DeleteJob(new JobKey(lastCustomIdFragment,
+                $"remindersFor{targetUser.ToString(CultureInfo.InvariantCulture)}")));
         }
         else if (lastCustomIdFragment == "page-next")
         {
@@ -131,10 +143,12 @@ public class RemindersMenu(ISchedulerFactory schedulerFactory, ulong targetUser)
         }
 
         MenuMessage message = await BuildMessage();
-        await RespondAsync(context, InteractionCallback.ModifyMessage(responseMessage => responseMessage
+        tasks.Add(RespondAsync(context, InteractionCallback.ModifyMessage(responseMessage => responseMessage
             .WithAttachments(message.Attachments)
             .WithComponents(message.Components)
             .WithFlags(message.Flags | MessageFlags.IsComponentsV2)
-            .WithAllowedMentions(message.AllowedMentions)));
+            .WithAllowedMentions(message.AllowedMentions))));
+
+        await Task.WhenAll(tasks);
     }
 }

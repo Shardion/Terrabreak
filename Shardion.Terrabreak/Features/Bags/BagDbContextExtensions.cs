@@ -21,18 +21,6 @@ public static class BagDbContextExtensions
         return bag;
     }
 
-    public static async Task<Bag> CreateBagAsync(this DbContext context, ulong userId, string name,
-        CancellationToken token = default)
-    {
-        Bag bag = new()
-        {
-            Name = name,
-            OwnerId = userId
-        };
-        await context.AddAsync(bag, token);
-        return bag;
-    }
-
     public static Bag? GetBag(this DbContext context, ulong userId, string name)
     {
         return context.Set<Bag>().FirstOrDefault(bag => bag.Name == name && bag.OwnerId == userId);

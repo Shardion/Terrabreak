@@ -14,25 +14,25 @@
     <ItemGroup>
         <PackageReference Include="Flurl" Version="4.0.0"/>
         <PackageReference Include="GTranslate" Version="2.3.1"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0-rc.1.25451.107">
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0-rc.2.25502.107">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0-rc.1.25451.107"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0-rc.1.25451.107"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-rc.1.25451.107"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-rc.1.25451.107"/>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-rc.1.25451.107"/>
-        <PackageReference Include="NetCord" Version="1.0.0-alpha.428"/>
-        <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.428"/>
-        <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.428"/>
-        <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.428"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="NetCord" Version="1.0.0-alpha.443" />
+        <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.443" />
+        <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.443" />
+        <PackageReference Include="NetCord.Services" Version="1.0.0-alpha.443" />
         <PackageReference Include="NuGet.Versioning" Version="6.14.0"/>
-        <PackageReference Include="Quartz" Version="3.15.0"/>
-        <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.15.0"/>
-        <PackageReference Include="Quartz.Extensions.Hosting" Version="3.15.0"/>
-        <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.15.0"/>
-        <PackageReference Include="Serilog" Version="4.3.1-dev-02385"/>
+        <PackageReference Include="Quartz" Version="3.15.1" />
+        <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.15.1" />
+        <PackageReference Include="Quartz.Extensions.Hosting" Version="3.15.1" />
+        <PackageReference Include="Quartz.Serialization.SystemTextJson" Version="3.15.1" />
+        <PackageReference Include="Serilog" Version="4.3.1-dev-02387" />
         <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.1-dev-02307"/>
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.1-dev-00953"/>
     </ItemGroup>

@@ -15,7 +15,7 @@ namespace Shardion.Terrabreak.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.0-rc.1.25451.107");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.0-rc.2.25502.107");
 
             modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.Bag", b =>
                 {
@@ -55,6 +55,104 @@ namespace Shardion.Terrabreak.Migrations
                     b.ToTable("BagEntry");
                 });
 
+            modelBuilder.Entity("Shardion.Terrabreak.Features.ShusoDivineReunion.Player.DiscordPlayer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Credits")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CureId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("HealId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Ribbons")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ShieldId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("WeaponId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("DiscordPlayer");
+                });
+
+            modelBuilder.Entity("Shardion.Terrabreak.Features.ShusoDivineReunion.Takeover.SdrChannel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CaptorId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("ChannelId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginalName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("ServerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("TakenOver")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId")
+                        .IsUnique();
+
+                    b.HasIndex("ServerId");
+
+                    b.ToTable("SdrChannel");
+                });
+
+            modelBuilder.Entity("Shardion.Terrabreak.Features.ShusoDivineReunion.Takeover.SdrServer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("PassagesUnlocked")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("ServerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("TakenOver")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServerId")
+                        .IsUnique();
+
+                    b.ToTable("SdrServer");
+                });
+
             modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.BagEntry", b =>
                 {
                     b.HasOne("Shardion.Terrabreak.Features.Bags.Bag", "Bag")
@@ -64,6 +162,31 @@ namespace Shardion.Terrabreak.Migrations
                         .IsRequired();
 
                     b.Navigation("Bag");
+                });
+
+            modelBuilder.Entity("Shardion.Terrabreak.Features.ShusoDivineReunion.Player.DiscordPlayer", b =>
+                {
+                    b.OwnsOne("Shardion.Terrabreak.Features.ShusoDivineReunion.Player.EnemyRecord", "StrongestEnemy", b1 =>
+                        {
+                            b1.Property<Guid>("DiscordPlayerId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("EnemyId")
+                                .IsRequired()
+                                .HasColumnType("TEXT");
+
+                            b1.Property<ulong>("SourceChannelId")
+                                .HasColumnType("INTEGER");
+
+                            b1.HasKey("DiscordPlayerId");
+
+                            b1.ToTable("DiscordPlayer");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DiscordPlayerId");
+                        });
+
+                    b.Navigation("StrongestEnemy");
                 });
 
             modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.Bag", b =>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using Flurl;
 using NetCord;
 
@@ -13,10 +14,10 @@ public class TextParsingUtil
     public static FrozenDictionary<string, FixEmbedDecision> ForwardFixEmbedDictionary { get; } =
         new Dictionary<string, FixEmbedDecision>
         {
-            ["twitter.com"] = new DictionaryFixEmbedDecision("vxtwitter.com"),
-            ["x.com"] = new DictionaryFixEmbedDecision("vxtwitter.com"),
+            ["twitter.com"] = new DictionaryFixEmbedDecision("fxtwitter.com"),
+            ["x.com"] = new DictionaryFixEmbedDecision("fxtwitter.com"),
             // xcancel's embeds are technically broken as well, as they lack video support
-            ["xcancel.com"] = new DictionaryFixEmbedDecision("vxtwitter.com"),
+            ["xcancel.com"] = new DictionaryFixEmbedDecision("fxtwitter.com"),
             ["pixiv.net"] = new DictionaryFixEmbedDecision("phixiv.net"),
             ["www.bilibili.com"] = new DictionaryFixEmbedDecision("www.vxbilibili.com"),
             ["b23.tv"] = new DictionaryFixEmbedDecision("vxb23.tv"),
@@ -125,5 +126,29 @@ public class TextParsingUtil
             foundLinks.Add(string.Join(null, currentLinkContents));
 
         return foundLinks.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Trims a string to a specified length in UTF-16 code units, removing extended grapheme clusters from the end
+    /// until it fits, or the string is empty.
+    /// Helpful when interacting with software that counts length in UTF-16 code units.
+    /// </summary>
+    /// <param name="target">The string to trim.</param>
+    /// <param name="length">The maximum length of the string after trimming, in UTF-16 code units.</param>
+    /// <returns>The string trimmed to the least amount of extended grapheme clusters that fit within the trim length.</returns>
+    public static string TrimToCodeUnitLength(string target, int length)
+    {
+        StringBuilder result = new(length);
+        TextElementEnumerator targetEnumerator = StringInfo.GetTextElementEnumerator(target);
+        while (targetEnumerator.MoveNext())
+        {
+            string currentTextElement = targetEnumerator.GetTextElement();
+            if (currentTextElement.Length + result.Length > length)
+            {
+                break;
+            }
+            result.Append(currentTextElement);
+        }
+        return result.ToString();
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using NetCord;
 using NetCord.Rest;
@@ -8,7 +9,7 @@ using Shardion.Terrabreak.Services.Identity;
 
 namespace Shardion.Terrabreak.Services.Menuing;
 
-public class MenuButtonComponentsModule(MenuManager menuManager, IdentityOptions identityOptions)
+public class MenuButtonComponentsModule(MenuManager menuManager, IdentityManager identityManager)
     : ComponentInteractionModule<ButtonInteractionContext>
 {
     [ComponentInteraction("menu")]
@@ -25,21 +26,24 @@ public class MenuButtonComponentsModule(MenuManager menuManager, IdentityOptions
 
         TerrabreakMenu menu = menuManager.Menus[guid];
         if (menu.AllowedUsers is IReadOnlySet<ulong> allowedUsers)
+        {
             if (!allowedUsers.Contains(Context.User.Id))
             {
-                if (identityOptions.AccessDeniedResponses is string[] deniedResponses)
-                    await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
-                        .WithContent(deniedResponses[Random.Shared.Next(deniedResponses.Length)])
-                        .WithFlags(MessageFlags.Ephemeral)
-                    ));
-                else
-                    await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
-                        .WithContent("Access denied.")
-                        .WithFlags(MessageFlags.Ephemeral)
-                    ));
-                return;
+                await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                    .WithContent(identityManager.GetAccessDeniedResponse())
+                    .WithFlags(MessageFlags.Ephemeral)
+                ));
             }
-
+        }
+        menu.LastInteractionTime = DateTimeOffset.UtcNow;
         await menuManager.Menus[guid].OnButton(Context);
+    }
+
+    public async Task ReplaceMenuAsync(TerrabreakMenu menu,
+        bool withResponse = false, RestRequestProperties? properties = null,
+        CancellationToken cancellationToken = default)
+    {
+        menu.LastInteractionTime = DateTimeOffset.UtcNow;
+        await menu.OnReplace(Context, menuManager.ActivateMenu(menu));
     }
 }

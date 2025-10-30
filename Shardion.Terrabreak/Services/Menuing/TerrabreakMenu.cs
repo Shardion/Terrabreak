@@ -15,7 +15,7 @@ namespace Shardion.Terrabreak.Services.Menuing;
 public abstract class TerrabreakMenu
 {
     public Guid? MenuGuid { get; set; }
-    public DateTimeOffset? CreationTime { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset? LastInteractionTime { get; set; } = DateTimeOffset.UtcNow;
     public IReadOnlySet<ulong>? AllowedUsers { get; set; }
 
     public abstract Task<MenuMessage> BuildMessage();
@@ -33,9 +33,30 @@ public abstract class TerrabreakMenu
         await RespondAsync(context, InteractionCallback.Message(finalMessage));
     }
 
+    public virtual async Task OnReplace(IComponentInteractionContext context, Guid guid)
+    {
+        MenuGuid = guid;
+        MenuMessage message = await BuildMessage();
+
+        await RespondAsync(context, InteractionCallback.ModifyMessage(existingMessage =>
+            existingMessage
+                .WithAttachments(message.Attachments)
+                .WithComponents(message.Components)
+                .WithFlags(message.Flags | MessageFlags.IsComponentsV2)
+                .WithAllowedMentions(message.AllowedMentions)
+        ));
+    }
+
     public virtual Task OnButton(ButtonInteractionContext context)
     {
         return Task.CompletedTask;
+    }
+
+    public async Task ReplaceMenuAsync(IComponentInteractionContext context, MenuManager menuManager, TerrabreakMenu menu,
+        bool withResponse = false, RestRequestProperties? properties = null,
+        CancellationToken cancellationToken = default)
+    {
+        await menu.OnReplace(context, menuManager.ActivateMenu(menu));
     }
 
     public Task<InteractionCallbackResponse?> RespondAsync(ApplicationCommandContext context,
@@ -133,6 +154,56 @@ public abstract class TerrabreakMenu
     }
 
     public Task DeleteFollowupAsync(IComponentInteractionContext context, ulong messageId,
+        RestRequestProperties? properties = null, CancellationToken cancellationToken = default)
+    {
+        return context.Interaction.DeleteFollowupMessageAsync(messageId, properties, cancellationToken);
+    }
+
+    public Task<InteractionCallbackResponse?> RespondAsync(IInteractionContext context,
+        InteractionCallbackProperties callback, bool withResponse = false, RestRequestProperties? properties = null,
+        CancellationToken cancellationToken = default)
+    {
+        return context.Interaction.SendResponseAsync(callback, withResponse, properties, cancellationToken);
+    }
+
+    public Task<RestMessage> GetResponseAsync(IInteractionContext context,
+        RestRequestProperties? properties = null, CancellationToken cancellationToken = default)
+    {
+        return context.Interaction.GetResponseAsync(properties, cancellationToken);
+    }
+
+    public Task<RestMessage> ModifyResponseAsync(IInteractionContext context, Action<MessageOptions> action,
+        RestRequestProperties? properties = null, CancellationToken cancellationToken = default)
+    {
+        return context.Interaction.ModifyResponseAsync(action, properties, cancellationToken);
+    }
+
+    public Task DeleteResponseAsync(IInteractionContext context, RestRequestProperties? properties = null,
+        CancellationToken cancellationToken = default)
+    {
+        return context.Interaction.DeleteResponseAsync(properties, cancellationToken);
+    }
+
+    public Task<RestMessage> FollowupAsync(IInteractionContext context, InteractionMessageProperties message,
+        RestRequestProperties? properties = null, CancellationToken cancellationToken = default)
+    {
+        return context.Interaction.SendFollowupMessageAsync(message, properties, cancellationToken);
+    }
+
+    public Task<RestMessage> GetFollowupAsync(IInteractionContext context, ulong messageId,
+        RestRequestProperties? properties = null, CancellationToken cancellationToken = default)
+    {
+        return context.Interaction.GetFollowupMessageAsync(messageId, properties, cancellationToken);
+    }
+
+    public Task<RestMessage> ModifyFollowupAsync(IInteractionContext context, ulong messageId,
+        Action<MessageOptions> action, RestRequestProperties? properties = null,
+        CancellationToken cancellationToken = default)
+    {
+        return context.Interaction.ModifyFollowupMessageAsync(messageId, action, properties, cancellationToken);
+    }
+
+    public Task DeleteFollowupAsync(IInteractionContext context, ulong messageId,
         RestRequestProperties? properties = null, CancellationToken cancellationToken = default)
     {
         return context.Interaction.DeleteFollowupMessageAsync(messageId, properties, cancellationToken);

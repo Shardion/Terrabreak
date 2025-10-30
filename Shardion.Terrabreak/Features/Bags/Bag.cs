@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Shardion.Terrabreak.Features.Bags;
 
+// TODO: Index by owner ID, do not enforce uniqueness
 public class Bag
 {
     [Key] public Guid Id { get; init; }

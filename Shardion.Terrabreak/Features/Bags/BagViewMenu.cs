@@ -107,24 +107,21 @@ public class BagViewMenu(IDbContextFactory<TerrabreakDatabaseContext> dbFactory,
     public override async Task OnButton(ButtonInteractionContext context)
     {
         if (TargetBag is null)
+        {
             throw new InvalidOperationException("Cannot build a bag view message without a bag to build from!");
+        }
 
         string[] customIdFragments = context.Interaction.Data.CustomId.Split(":");
         string secondLastCustomIdFragment = customIdFragments[^2];
         string lastCustomIdFragment = customIdFragments[^1];
         if (secondLastCustomIdFragment.StartsWith("delete"))
         {
-            // We are using SQLite
-            // ReSharper disable once MethodHasAsyncOverload
-            TerrabreakDatabaseContext db = dbFactory.CreateDbContext();
+            TerrabreakDatabaseContext db = await dbFactory.CreateDbContextAsync();
             Guid deleteId = Guid.Parse(lastCustomIdFragment);
             BagEntry? entry = db.Find<BagEntry>(deleteId);
             if (entry is null) throw new InvalidOperationException("Bag entry must exist to be deleted!");
             db.Remove(entry);
-
-            // We are using SQLite
-            // ReSharper disable once MethodHasAsyncOverload
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             TargetBag = db.Find<Bag>(TargetBag.Id);
         }
         else if (lastCustomIdFragment == "page-next")
