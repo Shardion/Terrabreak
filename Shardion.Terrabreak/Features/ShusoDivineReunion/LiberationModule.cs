@@ -52,6 +52,22 @@ public class LiberationModule(MenuManager menuManager, IDbContextFactory<Terrabr
     [SlashCommand("liberate", "Rid this channel of its invaders! Liberation, yay!!", Contexts = [InteractionContextType.Guild])]
     public async Task Liberate()
     {
+        if (Context.Interaction.Guild is not Guild server)
+        {
+            await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent("This command must be used inside a server! (Otherwise, where would the monsters live...?)")
+                .WithFlags(MessageFlags.Ephemeral)
+            ));
+            return;
+        }
+
+        // Sad and awful hack, but I forgot I needed to do this...!!
+        if (Context.Channel.Id == 991003051160662086 || Context.Channel.Id == 1433458371989864452)
+        {
+            await ActivateMenuAsync(new SecretBossMenu(dbContextFactory, _menuManager, server, takeoverManager));
+            return;
+        }
+
         TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
         if (dbContext.GetChannel(Context.Channel.Id) is not SdrChannel channel)
         {

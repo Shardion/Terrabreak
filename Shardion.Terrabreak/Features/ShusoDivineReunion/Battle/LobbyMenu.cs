@@ -33,6 +33,16 @@ public class LobbyMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFac
         await base.OnCreate(context, guid);
     }
 
+    public override async Task OnReplace(IComponentInteractionContext context, Guid guid)
+    {
+        TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        DiscordPlayer player = await dbContext.GetOrCreatePlayerFromUserAsync(context.Interaction.User);
+        Leader = player;
+        Players.Add(player);
+
+        await base.OnReplace(context, guid);
+    }
+
     public override Task<MenuMessage> BuildMessage()
     {
         if (Players.IsEmpty)

@@ -53,7 +53,10 @@ public static class SdrRegistries
         new EnemySilkseeker(),
         new EnemyLifeBloom(),
         new EnemyFormless(),
-        new EnemyBoxGod()
+        new EnemyTheSinger(),
+        new EnemyTwinespinner(),
+        new EnemyParting(),
+        new EnemyBoxGod(),
     ]);
 
     public static IReadOnlyList<string> RibbonResponses { get; } = new List<string>([

@@ -5,7 +5,7 @@ namespace Shardion.Terrabreak.Features.ShusoDivineReunion.Equipment;
 public sealed record HealPotion : IHeal
 {
     public string Name => "Healing Potion";
-    public string Description => "A true classic! Use to recover 100 HP.";
+    public string Description => "A true classic! Use to recover a moderate amount of HP.";
     public Tier Tier => Tier.Two;
 
     public int Heal(IPlayer wielder)
