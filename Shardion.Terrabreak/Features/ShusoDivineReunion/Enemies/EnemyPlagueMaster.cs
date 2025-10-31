@@ -8,7 +8,7 @@ public sealed record EnemyPlagueMaster : IEnemy
 {
     public string Name => "Plague Master";
     public string Description => "A freak accident with lightning allowed this creature to inflict vile diseases.";
-    public int Credits => 2500;
+    public int Credits => 500;
     public int PremultHealthMax => 150;
     public double TargetTotalPowerLevel => 3.50;
 

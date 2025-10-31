@@ -44,4 +44,17 @@ public interface IEnemy : INamedEntity
     }
 
     protected IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players);
+
+    public static int GetMaxPlayers(IEnemy enemy)
+    {
+        int maxPlayers = enemy.TargetTotalPowerLevel switch
+        {
+            >= 3.0 => 4,
+            >= 2.0 => 3,
+            >= 0.0 => 2,
+            _ => 4
+        };
+
+        return maxPlayers;
+    }
 }

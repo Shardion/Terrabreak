@@ -11,6 +11,7 @@ using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using Shardion.Terrabreak.Features.Documentation;
 using Shardion.Terrabreak.Features.ShusoDivineReunion.Battle;
+using Shardion.Terrabreak.Features.ShusoDivineReunion.Enemies;
 using Shardion.Terrabreak.Features.ShusoDivineReunion.Passages;
 using Shardion.Terrabreak.Features.ShusoDivineReunion.Player;
 using Shardion.Terrabreak.Features.ShusoDivineReunion.Shop;
@@ -21,7 +22,7 @@ using Shardion.Terrabreak.Services.Menuing;
 
 namespace Shardion.Terrabreak.Features.ShusoDivineReunion;
 
-public class LiberationModule(MenuManager menuManager, IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, IdentityManager identityManager, TakeoverManager takeoverManager, OverviewManager overviewManager)
+public class LiberationModule(MenuManager menuManager, IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, IdentityManager identityManager, TakeoverManager takeoverManager, OverviewManager overviewManager, LiberationFeature liberationFeature)
     : TerrabreakApplicationCommandModule(menuManager)
 {
     private readonly MenuManager _menuManager = menuManager;
@@ -61,10 +62,19 @@ public class LiberationModule(MenuManager menuManager, IDbContextFactory<Terrabr
             return;
         }
 
+        if (liberationFeature.PlayersInBattles.ContainsKey(Context.User.Id))
+        {
+            await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent("You're already in a battle!")
+                .WithFlags(MessageFlags.Ephemeral)
+            ));
+            return;
+        }
+
         // Sad and awful hack, but I forgot I needed to do this...!!
         if (Context.Channel.Id == 991003051160662086 || Context.Channel.Id == 1433458371989864452)
         {
-            await ActivateMenuAsync(new SecretBossMenu(dbContextFactory, _menuManager, server, takeoverManager));
+            await ActivateMenuAsync(new SecretBossMenu(dbContextFactory, _menuManager, server, takeoverManager, liberationFeature));
             return;
         }
 
@@ -78,7 +88,14 @@ public class LiberationModule(MenuManager menuManager, IDbContextFactory<Terrabr
             return;
         }
 
-        await ActivateMenuAsync(new LobbyMenu(dbContextFactory, _menuManager, channel, takeoverManager));
+        if (IEnemy.GetMaxPlayers(channel.Captor) <= 1)
+        {
+            DiscordPlayer player = await dbContext.GetOrCreatePlayerFromUserAsync(Context.Interaction.User);
+            await ActivateMenuAsync(new LiberationMenu(dbContextFactory, [player], new BattleEngine(channel.Captor, [player]), takeoverManager, liberationFeature));
+            return;
+        }
+
+        await ActivateMenuAsync(new LobbyMenu(dbContextFactory, _menuManager, channel, takeoverManager, liberationFeature));
     }
 
     [TakeoverStartedPrecondition<ApplicationCommandContext>]
@@ -164,26 +181,19 @@ public class LiberationModule(MenuManager menuManager, IDbContextFactory<Terrabr
             components.Add(new ComponentSeparatorProperties());
         }
 
-        components.Add(new TextDisplayProperties("The next invaders to defeat are..."));
-
         IEnumerable<SdrChannel> channels = dbContext.Set<SdrChannel>().Where(channel => channel.ServerId == server.Id).AsEnumerable().Where(channel => channel.Captor.TargetTotalPowerLevel > playerStrongestTpl);
         SortedSet<SdrChannel> sortedChannels = new(channels, new SdrChannelTplComparer());
-
-        int entryNumber = 0;
-        StringBuilder nextEnemies = new();
-        foreach (SdrChannel channel in sortedChannels)
+        SdrChannel? maybeChannel = sortedChannels.FirstOrDefault();
+        if (maybeChannel is SdrChannel channel)
         {
-            entryNumber++;
-            nextEnemies.AppendLine($"{entryNumber}. **{channel.Captor.Name}**, in <#{channel.ChannelId}>");
-            if (entryNumber >= 5)
-            {
-                break;
-            }
+            components.Add(new TextDisplayProperties(
+                $"The next invader to defeat is **{channel.Captor.Name}**, in <#{channel.ChannelId}>."));
         }
-
-        components.Add(nextEnemies.Length <= 0
-            ? new TextDisplayProperties("**None!** You've defeated all the invaders!!")
-            : new TextDisplayProperties(nextEnemies.ToString()));
+        else
+        {
+            components.Add(new TextDisplayProperties(
+                "You've defeated all the invaders!!"));
+        }
 
         await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
             .WithComponents([new ComponentContainerProperties(components)])
@@ -232,5 +242,30 @@ public class LiberationModule(MenuManager menuManager, IDbContextFactory<Terrabr
             ])
             .WithFlags(MessageFlags.IsComponentsV2)
         ));
+    }
+
+    [TakeoverStartedPrecondition<ApplicationCommandContext>]
+    [SlashCommand("reset", "Restart this rotten earth.", Contexts = [InteractionContextType.Guild], IntegrationTypes = [ApplicationIntegrationType.GuildInstall])]
+    public async Task Reset()
+    {
+        TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        DiscordPlayer player = await dbContext.GetOrCreatePlayerFromUserAsync(Context.Interaction.User);
+
+        player.WeaponId = "WoodenBlade";
+        player.ShieldId = "CardboardShield";
+        player.HealId = null;
+        player.CureId = null;
+        player.Credits = 0;
+        player.Ribbons = 0;
+        player.StrongestEnemy = null;
+
+        await Task.WhenAll(
+        [
+            dbContext.SaveChangesAsync(),
+            RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent("Reset.")
+                .WithFlags(MessageFlags.Ephemeral)
+            ))
+        ]);
     }
 }

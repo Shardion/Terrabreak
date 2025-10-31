@@ -10,9 +10,9 @@ public sealed record EnemyFormless : IEnemy
 {
     public string Name => "Formless";
     public string Description => "Hahahahaha...";
-    public int Credits => 1000;
-    public int PremultHealthMax => 200;
-    public double TargetTotalPowerLevel => 7.50;
+    public int Credits => 6000;
+    public int PremultHealthMax => 250;
+    public double TargetTotalPowerLevel => 14.00;
 
     public IReadOnlyDictionary<IPlayer, EnemyHit> Attack(EnemyState state, IReadOnlyDictionary<IPlayer, PlayerState> players)
     {
@@ -27,7 +27,7 @@ public sealed record EnemyFormless : IEnemy
         }
         else
         {
-            hits.Add(randomPlayer.Key, new($"{randomPlayer.Key.Weapon.Name}", [], randomPlayer.Key.Weapon.DealDamage(randomPlayer.Key, this) * 2));
+            hits.Add(randomPlayer.Key, new($"{randomPlayer.Key.Weapon.Name}", [], randomPlayer.Key.Weapon.DealDamage(randomPlayer.Key, this) * 3));
         }
         return hits;
     }

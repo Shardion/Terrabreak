@@ -9,6 +9,7 @@ using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using NetCord.Services.ComponentInteractions;
+using Shardion.Terrabreak.Features.ShusoDivineReunion.Enemies;
 using Shardion.Terrabreak.Features.ShusoDivineReunion.Equipment;
 using Shardion.Terrabreak.Features.ShusoDivineReunion.Player;
 using Shardion.Terrabreak.Features.ShusoDivineReunion.Shop;
@@ -18,7 +19,7 @@ using Shardion.Terrabreak.Services.Menuing;
 
 namespace Shardion.Terrabreak.Features.ShusoDivineReunion.Battle;
 
-public class LobbyMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, MenuManager menuManager, SdrChannel channel, TakeoverManager takeoverManager) : TerrabreakMenu
+public class LobbyMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, MenuManager menuManager, SdrChannel channel, TakeoverManager takeoverManager, LiberationFeature liberationFeature) : TerrabreakMenu
 {
     public ConcurrentBag<DiscordPlayer> Players { get; set; } = [];
     public DiscordPlayer? Leader { get; set; }
@@ -58,14 +59,14 @@ public class LobbyMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFac
         List<IComponentContainerComponentProperties> battleUi = [new TextDisplayProperties("### Lobby")];
         if (channel.TakenOver)
         {
-            battleUi.Add(new TextDisplayProperties($"Join the fight to take back <#{channel.ChannelId}>!"));
+            battleUi.Add(new TextDisplayProperties($"**{IEnemy.GetMaxPlayers(channel.Captor)} player{(IEnemy.GetMaxPlayers(channel.Captor) > 1 ? "s" : "")}** can join the fight to take back <#{channel.ChannelId}>!"));
         }
         else
         {
             battleUi.Add(new TextDisplayProperties("It's material grinding time!"));
         }
         string liberate = " **liberate the channel,** and";
-        battleUi.Add(new TextDisplayProperties($"This channel {(channel.TakenOver ? "is" : "was")} held by **{channel.Captor.Name}**.\nIf you win, you'll{(channel.TakenOver ? liberate : "")} receive <:credit:1426414005957689445> **~{channel.Captor.Credits}**."));
+        battleUi.Add(new TextDisplayProperties($"This channel {(channel.TakenOver ? "is" : "was")} held by **{channel.Captor.Name}**.\nIf you win, you'll{(channel.TakenOver ? liberate : "")} receive a combined <:credit:1426414005957689445> **~{channel.Captor.Credits}**."));
 
         foreach (DiscordPlayer player in Players)
         {
@@ -78,7 +79,10 @@ public class LobbyMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFac
         }
 
         battleUi.Add(new ActionRowProperties([
-            new ButtonProperties($"menu:{MenuGuid}:join", "Join", ButtonStyle.Success),
+            new ButtonProperties($"menu:{MenuGuid}:join", "Join", ButtonStyle.Success)
+            {
+                Disabled = Players.Count >= IEnemy.GetMaxPlayers(channel.Captor) && channel.TakenOver
+            },
             new ButtonProperties($"menu:{MenuGuid}:leave", "Leave", ButtonStyle.Danger),
             new ButtonProperties($"menu:{MenuGuid}:start", "Start", ButtonStyle.Secondary),
         ]));
@@ -108,6 +112,23 @@ public class LobbyMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFac
 
         if (context.Interaction.Data.CustomId.EndsWith("join"))
         {
+            if (Players.Count >= IEnemy.GetMaxPlayers(channel.Captor) && channel.TakenOver)
+            {
+                await RespondAsync(context, InteractionCallback.Message(new InteractionMessageProperties()
+                    .WithContent("This lobby has reached the player limit!")
+                    .WithFlags(MessageFlags.Ephemeral)));
+                return;
+            }
+
+            if (liberationFeature.PlayersInBattles.ContainsKey(context.User.Id))
+            {
+                await RespondAsync(context, InteractionCallback.Message(new InteractionMessageProperties()
+                    .WithContent("You're already in a battle!")
+                    .WithFlags(MessageFlags.Ephemeral)
+                ));
+                return;
+            }
+
             if (Players.Any(player => player.UserId == context.Interaction.User.Id))
             {
                 await RespondAsync(context, InteractionCallback.Message(new InteractionMessageProperties()
@@ -142,13 +163,29 @@ public class LobbyMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFac
                 }
             }
 
-            Players = new ConcurrentBag<DiscordPlayer>(copyPlayers);
+            Players = new(copyPlayers);
             rebuild = true;
         }
         else if (context.Interaction.Data.CustomId.EndsWith("start"))
         {
             List<DiscordPlayer> players = Players.ToList();
-            await ReplaceMenuAsync(context, menuManager, new LiberationMenu(dbContextFactory, players, new BattleEngine(channel.Captor, players), takeoverManager));
+            foreach (DiscordPlayer player in Players)
+            {
+                if (liberationFeature.PlayersInBattles.ContainsKey(player.UserId))
+                {
+                    players.Remove(player);
+                }
+            }
+
+            if (players.Count <= 0)
+            {
+                await RespondAsync(context, InteractionCallback.Message(new InteractionMessageProperties()
+                    .WithContent("No players in this lobby are allowed to enter! Everyone is already in a battle!")
+                    .WithFlags(MessageFlags.Ephemeral)));
+                return;
+            }
+
+            await ReplaceMenuAsync(context, menuManager, new LiberationMenu(dbContextFactory, players, new BattleEngine(channel.Captor, players), takeoverManager, liberationFeature));
         }
 
         if (rebuild)

@@ -9,9 +9,9 @@ public sealed record EnemyBlenderman : IEnemy
 {
     public string Name => "Blenderman";
     public string Description => "An Anomaly-class entity with the capability to psychically terrorize.";
-    public int Credits => 12522;
+    public int Credits => 1500;
     public int PremultHealthMax => 175;
-    public double TargetTotalPowerLevel => 5.00;
+    public double TargetTotalPowerLevel => 7;
 
     public IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players)
     {

@@ -75,7 +75,7 @@ public class BattleEngine
             }
             if (victor is Victor.Players)
             {
-                int credits = VariateCredits(Enemy.Credits);
+                int credits = VariateCredits(Enemy.Credits) / Players.Count;
                 LogLine($"**The battle has been won!** {(Players.Count > 1 ? "Everyone" : "You")} earned <:credit:1426414005957689445> **{credits}**!");
                 return new BattleResult(victor, credits);
             }

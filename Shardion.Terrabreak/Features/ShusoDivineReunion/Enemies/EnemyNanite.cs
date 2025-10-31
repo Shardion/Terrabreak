@@ -9,7 +9,7 @@ public sealed record EnemyNanite : IEnemy
     public string Name => "BGN-7 \"Nanite\"";
     public string InternalName => "Nanite";
     public string Description => "An autonomous repair platform. Can repair damaged machines in minutes, but only has maintenance tools for self-defense.";
-    public int Credits => 400;
+    public int Credits => 300;
     public int PremultHealthMax => 125;
     public double TargetTotalPowerLevel => 2.0;
 

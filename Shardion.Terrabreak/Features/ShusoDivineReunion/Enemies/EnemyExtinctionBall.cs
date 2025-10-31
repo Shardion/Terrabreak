@@ -8,9 +8,9 @@ public sealed record EnemyExtinctionBall : IEnemy
 {
     public string Name => "Extinction Ball";
     public string Description => "A sentient orb that radiates a powerful aura of pain. Highly explosive.";
-    public int Credits => 15222;
-    public int PremultHealthMax => 175;
-    public double TargetTotalPowerLevel => 6.00;
+    public int Credits => 1500;
+    public int PremultHealthMax => 200;
+    public double TargetTotalPowerLevel => 9;
 
     public IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players) =>
     [

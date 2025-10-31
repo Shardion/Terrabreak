@@ -11,7 +11,7 @@ public sealed record EnemyCowDemon : IEnemy
     public string Name => "Cow-demon";
     public string InternalName => "CowDemon";
     public string Description => "A low-level goon of cow-Lucifer, with only rudimentary tools to apprehend \"heretics.\"";
-    public int Credits => 250;
+    public int Credits => 225;
     public int PremultHealthMax => 150;
     public double TargetTotalPowerLevel => 1.25;
 

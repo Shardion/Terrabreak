@@ -9,9 +9,9 @@ public sealed record EnemyLineBreaker : IEnemy
     public string Name => "BGN-4 \"Line Breaker\"";
     public string InternalName => "LineBreaker";
     public string Description => "An autonomous attack vehicle, used during assaults on buildings and urban areas.";
-    public int Credits => 10000;
+    public int Credits => 850;
     public int PremultHealthMax => 150;
-    public double TargetTotalPowerLevel => 4.50;
+    public double TargetTotalPowerLevel => 5.5;
 
     public IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players) =>
     [

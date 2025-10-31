@@ -12,14 +12,15 @@ public sealed record EnemyTwinespinner : IEnemy
     public string InternalName => "Twinespinner";
     public string Description => "Past and future, they weave together as \"present.\"";
     public int Credits => 22;
-    public int PremultHealthMax => 200;
-    public double TargetTotalPowerLevel => 8.00;
+    public int PremultHealthMax => 250;
+    public double TargetTotalPowerLevel => 16.0;
 
     public IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players)
     {
         List<EnemyAttack> attacks =
         [
             new("Fool's Errand", [], 150, 1),
+            new("Widespread Necrosis", [], 75, 3),
             new("Solar Interleaving", [], 75, 1, UntargetedDamage: 0, UntargetedDebuffs: [Debuff.Burning]),
         ];
 

@@ -19,7 +19,7 @@ using Shardion.Terrabreak.Services.Menuing;
 
 namespace Shardion.Terrabreak.Features.ShusoDivineReunion.Battle;
 
-public class LiberationMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, IReadOnlyCollection<DiscordPlayer> discordPlayers, BattleEngine battle, TakeoverManager takeoverManager) : TerrabreakMenu
+public class LiberationMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, IReadOnlyCollection<DiscordPlayer> discordPlayers, BattleEngine battle, TakeoverManager takeoverManager, LiberationFeature liberationFeature) : TerrabreakMenu
 {
     public static FrozenDictionary<Debuff, string> DebuffEmojis { get; } = new Dictionary<Debuff, string>
     {
@@ -34,6 +34,11 @@ public class LiberationMenu(IDbContextFactory<TerrabreakDatabaseContext> dbConte
     public override async Task OnCreate(ApplicationCommandContext context, Guid guid)
     {
         battle.Start();
+        foreach (DiscordPlayer player in discordPlayers)
+        {
+            liberationFeature.PlayersInBattles.AddOrUpdate(player.UserId, _ => true, (_, _) => true);
+        }
+
         await base.OnCreate(context, guid);
         _ = Task.Run(async () => await LoopToCompletion(context));
     }
@@ -41,6 +46,11 @@ public class LiberationMenu(IDbContextFactory<TerrabreakDatabaseContext> dbConte
     public override async Task OnReplace(IComponentInteractionContext context, Guid guid)
     {
         battle.Start();
+        foreach (DiscordPlayer player in discordPlayers)
+        {
+            liberationFeature.PlayersInBattles.AddOrUpdate(player.UserId, _ => true, (_, _) => true);
+        }
+
         await base.OnReplace(context, guid);
         _ = Task.Run(async () => await LoopToCompletion(context));
     }
@@ -85,56 +95,76 @@ public class LiberationMenu(IDbContextFactory<TerrabreakDatabaseContext> dbConte
 
     public async Task LoopToCompletion(IInteractionContext context)
     {
-        // TODO: `while` is scary...
-        while (Result is null)
+        try
         {
-            // Manually stave off menu GC
-            LastInteractionTime = DateTimeOffset.UtcNow;
-
-            int delay = 5;
-            if (discordPlayers.Count > 1)
+            // TODO: `while` is scary...
+            while (Result is null)
             {
-                delay += 3;
-            }
-            if (discordPlayers.Count > 2)
-            {
-                delay += 2;
-            }
+                // Manually stave off menu GC
+                LastInteractionTime = DateTimeOffset.UtcNow;
 
-            await Task.Delay(TimeSpan.FromSeconds(delay));
-            Result = battle.Turn();
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                Result = battle.Turn();
 
-            MenuMessage message = await BuildMessage();
-            Task editTask = ModifyResponseAsync(context, responseMessage => responseMessage
-                .WithAttachments(message.Attachments)
-                .WithComponents(message.Components)
-                .WithFlags(message.Flags | MessageFlags.IsComponentsV2)
-                .WithAllowedMentions(message.AllowedMentions));
+                MenuMessage message = await BuildMessage();
+                Task editTask = ModifyResponseAsync(context, responseMessage => responseMessage
+                    .WithAttachments(message.Attachments)
+                    .WithComponents(message.Components)
+                    .WithFlags(message.Flags | MessageFlags.IsComponentsV2)
+                    .WithAllowedMentions(message.AllowedMentions));
 
-            if (Result is { Victor: Victor.Players } result)
-            {
-                TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
-                Task relinquishChannelTask = takeoverManager.RelinquishChannelAsync(dbContext, context.Interaction.Channel.Id);
-                foreach (DiscordPlayer player in discordPlayers)
+                if (Result is not null)
                 {
-                    player.Credits += result.Payout;
-                    if (player.StrongestEnemy is EnemyRecord playerStrongestEnemy)
+                    foreach (DiscordPlayer playerInBattle in discordPlayers)
                     {
-                        if (playerStrongestEnemy.Enemy.TargetTotalPowerLevel < battle.Enemy.TargetTotalPowerLevel)
-                        {
-                            player.StrongestEnemy = new(battle.Enemy.InternalName, context.Interaction.Channel.Id);
-                        }
-                    }
-                    else
-                    {
-                        player.StrongestEnemy = new(battle.Enemy.InternalName, context.Interaction.Channel.Id);
+                        _ = liberationFeature.PlayersInBattles.Remove(playerInBattle.UserId, out bool _);
                     }
                 }
-                dbContext.UpdateRange(discordPlayers);
-                await Task.WhenAll(relinquishChannelTask, dbContext.SaveChangesAsync());
-            }
 
-            await editTask;
+                if (Result is { Victor: Victor.Players } result)
+                {
+                    TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
+                    Task relinquishChannelTask =
+                        takeoverManager.RelinquishChannelAsync(dbContext, context.Interaction.Channel.Id);
+                    List<DiscordPlayer> updatedPlayers = [];
+                    foreach (DiscordPlayer oldPlayer in discordPlayers)
+                    {
+                        DiscordPlayer? newPlayer = dbContext.GetPlayer(oldPlayer.UserId);
+                        if (newPlayer is null)
+                        {
+                            newPlayer = oldPlayer;
+                        }
+
+                        newPlayer.Credits += result.Payout;
+                        if (newPlayer.StrongestEnemy is EnemyRecord playerStrongestEnemy)
+                        {
+                            if (playerStrongestEnemy.Enemy.TargetTotalPowerLevel < battle.Enemy.TargetTotalPowerLevel)
+                            {
+                                newPlayer.StrongestEnemy =
+                                    new(battle.Enemy.InternalName, context.Interaction.Channel.Id);
+                            }
+                        }
+                        else
+                        {
+                            newPlayer.StrongestEnemy = new(battle.Enemy.InternalName, context.Interaction.Channel.Id);
+                        }
+
+                        updatedPlayers.Add(newPlayer);
+                    }
+
+                    dbContext.UpdateRange(updatedPlayers);
+                    await Task.WhenAll(relinquishChannelTask, dbContext.SaveChangesAsync());
+                }
+
+                await editTask;
+            }
+        }
+        finally
+        {
+            foreach (DiscordPlayer playerInBattle in discordPlayers)
+            {
+                _ = liberationFeature.PlayersInBattles.Remove(playerInBattle.UserId, out bool _);
+            }
         }
     }
 

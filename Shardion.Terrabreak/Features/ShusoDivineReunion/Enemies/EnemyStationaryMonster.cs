@@ -8,7 +8,7 @@ public sealed record EnemyStationaryMonster : IEnemy
 {
     public string Name => "Stationary Monster";
     public string Description => "A large creature with glaring eyes and extremely sharp teeth. Completely immobile, it appears to be a part of the landscape.";
-    public int Credits => 550;
+    public int Credits => 350;
     public int PremultHealthMax => 125;
     public double TargetTotalPowerLevel => 2.50;
 

@@ -26,6 +26,7 @@ public class ShopMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFact
     public ShopPurchase? PurchaseToMake { get; set; }
     public DiscordPlayer? TargetPlayer { get; set; }
     public SdrServer? TargetServer { get; set; }
+    public bool PassageNote { get; set; }
 
     public static readonly string[] DefaultResponses =
     [
@@ -75,8 +76,8 @@ public class ShopMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFact
     public static FrozenDictionary<Tier, int> CostsByTier { get; } = new Dictionary<Tier, int>([
         new(Tier.One, 25),
         new(Tier.Two, 100),
-        new(Tier.Three, 1000),
-        new(Tier.Four, 10000),
+        new(Tier.Three, 2500),
+        new(Tier.Four, 15000),
     ]).ToFrozenDictionary();
 
     public static FrozenDictionary<EquipmentType, string[]> EmojiListsByEquipmentType { get; } = new Dictionary<EquipmentType, string[]>([
@@ -269,6 +270,11 @@ public class ShopMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFact
             new TextDisplayProperties($"-# <:credit:1426414005957689445> {player.Credits}"),
         ]);
 
+        if (PassageNote)
+        {
+            components.Add(new TextDisplayProperties("-# Hint: See passages with </passages:1433334350119702533>"));
+        }
+
         return new MenuMessage([new ComponentContainerProperties(components)]);
     }
 
@@ -353,6 +359,7 @@ public class ShopMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFact
                     throw new InvalidOperationException("Cannot purchase a new passage when all passages are unlocked!");
                 }
 
+                PassageNote = true;
                 TargetServer.PassagesUnlocked.Add(firstLockedPassage);
                 dbContext.Update(TargetServer);
             }
@@ -382,17 +389,24 @@ public class ShopMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFact
                 tierString = lastCustomIdFragment;
             }
 
-
             PurchaseType purchaseType = Enum.Parse<PurchaseType>(typeString);
             INamedEntity? entity = null;
             Tier? maybeTier = null;
-            int cost = 500;
+            int cost;
             if (ConvertPurchaseType(purchaseType) is EquipmentType equipmentType)
             {
                 Tier tier = Enum.Parse<Tier>(tierString ?? throw new InvalidOperationException("Can't produce equipment for a null tier!"));
                 maybeTier = tier;
                 entity = GetListForEquipmentType(equipmentType)[tier];
                 cost = CostsByTier[tier];
+            }
+            else if (purchaseType == PurchaseType.Passage)
+            {
+                cost = 1000;
+            }
+            else
+            {
+                cost = 500;
             }
 
             PurchaseToMake = new ShopPurchase
@@ -432,7 +446,7 @@ public class ShopMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFact
         if (passagesAvailable)
         {
             maybeLines.Add(new(
-                new ButtonProperties($"menu:{MenuGuid}:Passage", "500", EmojiProperties.Custom(1426414005957689445), ButtonStyle.Success),
+                new ButtonProperties($"menu:{MenuGuid}:Passage", "1000", EmojiProperties.Custom(1426414005957689445), ButtonStyle.Success),
                 [new("- <:passage:1431869229665226782> Passage")]
             ));
         }

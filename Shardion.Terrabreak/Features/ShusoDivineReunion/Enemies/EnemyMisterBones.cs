@@ -8,7 +8,7 @@ public sealed record EnemyMisterBones : IEnemy
 {
     public string Name => "Mister Bones";
     public string Description => "A skeleton walking among us!";
-    public int Credits => 300;
+    public int Credits => 250;
     public int PremultHealthMax => 150;
     public double TargetTotalPowerLevel => 1.5;
 

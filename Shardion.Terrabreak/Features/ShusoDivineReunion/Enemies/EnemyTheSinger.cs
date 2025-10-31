@@ -11,8 +11,8 @@ public sealed record EnemyTheSinger : IEnemy
     public string InternalName => "TheSinger";
     public string Description => "Answers to all can be found above us.";
     public int Credits => 22;
-    public int PremultHealthMax => 150;
-    public double TargetTotalPowerLevel => 8.00;
+    public int PremultHealthMax => 200;
+    public double TargetTotalPowerLevel => 16.0;
 
     public IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players)
     {
@@ -20,6 +20,7 @@ public sealed record EnemyTheSinger : IEnemy
         [
             new("Origin in Celestial Dust", [], 75, 4),
             new("Tragic Ending", [Debuff.Sealed], 150, 1),
+            new("Binding Serenade", [Debuff.Sealed], 75, 2),
         ];
 
         if (players.Any(pair => !pair.Value.Debuffs.Contains(Debuff.Sealed)))

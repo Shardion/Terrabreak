@@ -8,9 +8,9 @@ public sealed record EnemyBrimbeast : IEnemy
 {
     public string Name => "Brimbeast";
     public string Description => "A majestic, secondary quadruped, known for its incredible dashes, and the ability to fire lasers from its eyes.";
-    public int Credits => 15222;
+    public int Credits => 1250;
     public int PremultHealthMax => 175;
-    public double TargetTotalPowerLevel => 5.50;
+    public double TargetTotalPowerLevel => 8;
 
     public IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players) =>
     [

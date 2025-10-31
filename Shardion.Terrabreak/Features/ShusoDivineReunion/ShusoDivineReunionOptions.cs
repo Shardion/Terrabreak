@@ -14,4 +14,5 @@ public sealed class ShusoDivineReunionOptions : IDynamicOptions
     };
 
     public ulong? TakeoverServerId { get; set; } = null;
+    public bool InhibitTakeoverMessage { get; set; } = false;
 }

@@ -11,7 +11,7 @@ using Shardion.Terrabreak.Services.Menuing;
 
 namespace Shardion.Terrabreak.Features.ShusoDivineReunion.Battle;
 
-public class SecretBossMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, MenuManager menuManager, Guild server, TakeoverManager takeoverManager) : TerrabreakMenu
+public class SecretBossMenu(IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, MenuManager menuManager, Guild server, TakeoverManager takeoverManager, LiberationFeature liberationFeature) : TerrabreakMenu
 {
     public override Task<MenuMessage> BuildMessage()
     {
@@ -50,6 +50,6 @@ public class SecretBossMenu(IDbContextFactory<TerrabreakDatabaseContext> dbConte
             ServerId = server.Id,
         };
 
-        await ReplaceMenuAsync(context, menuManager, new LobbyMenu(dbContextFactory, menuManager, fakeChannel, takeoverManager));
+        await ReplaceMenuAsync(context, menuManager, new LobbyMenu(dbContextFactory, menuManager, fakeChannel, takeoverManager, liberationFeature));
     }
 }

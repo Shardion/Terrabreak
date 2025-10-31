@@ -9,7 +9,7 @@ public sealed record EnemyLegendaryWarrior : IEnemy
     public string Name => "\"The Legendary Warrior\"";
     public string InternalName => "LegendaryWarrior";
     public string Description => "An incredibly-fierce, incredibly-large insect, with a dangerous nail, and a long history.";
-    public int Credits => 1000;
+    public int Credits => 400;
     public int PremultHealthMax => 125;
     public double TargetTotalPowerLevel => 3.00;
 

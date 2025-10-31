@@ -14,11 +14,12 @@ using Serilog;
 using Shardion.Terrabreak.Features.Documentation;
 using Shardion.Terrabreak.Services.Database;
 using Shardion.Terrabreak.Services.Identity;
+using Shardion.Terrabreak.Services.Options;
 using Shardion.Terrabreak.Utilities;
 
 namespace Shardion.Terrabreak.Features.ShusoDivineReunion.Takeover;
 
-public class TakeoverManager(RestClient discord, IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, ISchedulerFactory schedulerFactory, DocumentationManager documentationManager) : ITerrabreakFeature
+public class TakeoverManager(RestClient discord, IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, ISchedulerFactory schedulerFactory, DocumentationManager documentationManager, OptionsManager optionsManager) : ITerrabreakFeature
 {
     public static readonly FrozenDictionary<ulong, ulong> TakeoverAnnouncements = new Dictionary<ulong, ulong>
     {
@@ -162,6 +163,15 @@ public class TakeoverManager(RestClient discord, IDbContextFactory<TerrabreakDat
             await Task.WhenAny(TakeoverChannelImmediatelyAsync(pair.Key, pair.Value), Task.Delay(TimeSpan.FromSeconds(60)));
         }
 
+        server.TakenOver = true;
+        dbContext.Update(server);
+        await dbContext.SaveChangesAsync();
+
+        if (optionsManager.Get<ShusoDivineReunionOptions>().InhibitTakeoverMessage)
+        {
+            return;
+        }
+
         if (!TakeoverAnnouncements.TryGetValue(serverId, out ulong announcementsChannelId))
         {
             Log.Error("Tried to take over a server that doesn't have a takeover announcements channel. This is a bug.");
@@ -212,21 +222,21 @@ public class TakeoverManager(RestClient discord, IDbContextFactory<TerrabreakDat
                 });
             }
         }
-
-        server.TakenOver = true;
-        dbContext.Update(server);
-        await dbContext.SaveChangesAsync();
     }
 
     public async Task TakeoverChannelImmediatelyAsync(ulong channelId, string enemyId)
     {
         TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
         SdrChannel? maybeSdrChannel = dbContext.GetChannel(channelId);
-        if (maybeSdrChannel is not null)
+        if (maybeSdrChannel is SdrChannel { TakenOver: true } sdrChannel && sdrChannel.CaptorId == enemyId)
         {
-            Log.Warning("Tried to take over a channel that's already been taken over, skipping. This is a bug.");
+            Log.Information("Tried to take over a channel that's already been taken over, resetting.");
+            sdrChannel.TakenOver = true;
+            dbContext.Update(sdrChannel);
+            await dbContext.SaveChangesAsync();
             return;
         }
+
         Channel maybeChannel = await discord.GetChannelAsync(channelId);
         if (maybeChannel is not IGuildChannel guildChannel)
         {

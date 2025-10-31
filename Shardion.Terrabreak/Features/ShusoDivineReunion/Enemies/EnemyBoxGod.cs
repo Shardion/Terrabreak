@@ -11,8 +11,8 @@ public sealed record EnemyBoxGod : IEnemy
     public string Name => "BOX GOD";
     public string Description => "You are not ready.";
     public int Credits => 41000000;
-    public int PremultHealthMax => 200;
-    public double TargetTotalPowerLevel => 8.00;
+    public int PremultHealthMax => 250;
+    public double TargetTotalPowerLevel => 16.00;
 
     public IReadOnlyDictionary<IPlayer, EnemyHit> Attack(EnemyState state, IReadOnlyDictionary<IPlayer, PlayerState> players)
     {
@@ -36,11 +36,12 @@ public sealed record EnemyBoxGod : IEnemy
             foreach ((IPlayer player, PlayerState playerState) in randomPlayers)
             {
                 Debuff randomDebuff = randomAttack.Debuffs.Shuffle().First();
-                hits.Add(player, new EnemyHit(randomAttack.AttackName, [randomDebuff], 0));
+                hits.Add(player, new(randomAttack.AttackName, [randomDebuff], 0));
             }
 
             return hits;
         }
+
         int currentPlayerCount = 0;
         foreach ((IPlayer player, PlayerState playerState) in randomPlayers)
         {
@@ -51,11 +52,11 @@ public sealed record EnemyBoxGod : IEnemy
                 {
                     break;
                 }
-                hits.Add(player, new EnemyHit(randomAttack.AttackName, untargetedDebuffs, untargetedDamage));
+                hits.Add(player, new(randomAttack.AttackName, untargetedDebuffs, untargetedDamage));
             }
             else
             {
-                hits.Add(player, new EnemyHit(randomAttack.AttackName, randomAttack.Debuffs, randomAttack.Damage));
+                hits.Add(player, new(randomAttack.AttackName, randomAttack.Debuffs, randomAttack.Damage));
                 currentPlayerCount++;
             }
         }
@@ -66,13 +67,13 @@ public sealed record EnemyBoxGod : IEnemy
     public IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players)
     {
         List<EnemyAttack> attacks = [
-            new("Boxing Match", [], 80, 1),
-            new("Unrelenting Assault", [], 50, 2),
+            new("Boxing Match", [], 125, 1),
+            new("Unrelenting Assault", [], 75, 2),
         ];
 
         if (players.All(player => player.Value.Debuffs.Count <= 0))
         {
-            attacks.Add(new("The Symbol of Destruction", [Debuff.Burning], 22, 2));
+            attacks.Add(new("The Symbol of Destruction", [Debuff.Burning], 41, 2));
             attacks.Add(new("The Mechanism", [Debuff.Burning, Debuff.Weakened, Debuff.Subjugation, Debuff.Sealed], 0, 2));
         }
 

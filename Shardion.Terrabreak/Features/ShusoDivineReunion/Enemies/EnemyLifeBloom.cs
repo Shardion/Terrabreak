@@ -10,9 +10,9 @@ public sealed record EnemyLifeBloom : IEnemy
 {
     public string Name => "Life Bloom";
     public string Description => "An extremely large jungle plant with surprisingly adept swordplay.";
-    public int Credits => 1000;
-    public int PremultHealthMax => 200;
-    public double TargetTotalPowerLevel => 7.00;
+    public int Credits => 4500;
+    public int PremultHealthMax => 250;
+    public double TargetTotalPowerLevel => 12;
 
     public IReadOnlyList<EnemyAttack> Attacks(IReadOnlyDictionary<IPlayer, PlayerState> players) =>
     [

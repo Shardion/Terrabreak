@@ -21,7 +21,7 @@ using Shardion.Terrabreak.Services.Menuing;
 namespace Shardion.Terrabreak.Features.ShusoDivineReunion;
 
 [InstanceOwnerPrecondition<ApplicationCommandContext>]
-public class SdrDebugModule(MenuManager menuManager, TakeoverManager takeoverManager, IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory)
+public class SdrDebugModule(MenuManager menuManager, TakeoverManager takeoverManager, IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory, LiberationFeature liberationFeature)
     : TerrabreakApplicationCommandModule(menuManager)
 {
     [InstanceOwnerPrecondition<ApplicationCommandContext>]
@@ -64,7 +64,7 @@ public class SdrDebugModule(MenuManager menuManager, TakeoverManager takeoverMan
             });
         }
 
-        await ActivateMenuAsync(new LiberationMenu(dbContextFactory, [player], new BattleEngine(enemy, players), takeoverManager));
+        await ActivateMenuAsync(new LiberationMenu(dbContextFactory, [player], new BattleEngine(enemy, players), takeoverManager, liberationFeature));
     }
 
     [InstanceOwnerPrecondition<ApplicationCommandContext>]
@@ -98,16 +98,27 @@ public class SdrDebugModule(MenuManager menuManager, TakeoverManager takeoverMan
     [InstanceOwnerPrecondition<ApplicationCommandContext>]
     [SlashCommand("teto-reset", "Reset your player data.", Contexts = [InteractionContextType.Guild], IntegrationTypes = [ApplicationIntegrationType.GuildInstall],
         DefaultGuildPermissions = Permissions.Administrator)]
-    public async Task TetoReset()
+    public async Task TetoReset(User? user)
     {
         TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
-        DiscordPlayer player = await dbContext.GetOrCreatePlayerFromUserAsync(Context.Interaction.User);
+        DiscordPlayer player;
+        if (user is not null)
+        {
+            player = await dbContext.GetOrCreatePlayerFromUserAsync(user);
+        }
+        else
+        {
+            player = await dbContext.GetOrCreatePlayerFromUserAsync(Context.Interaction.User);
+        }
+
         player.WeaponId = "WoodenBlade";
         player.ShieldId = "CardboardShield";
         player.HealId = null;
         player.CureId = null;
         player.Credits = 0;
         player.Ribbons = 0;
+        player.StrongestEnemy = null;
+
         await Task.WhenAll(
         [
             dbContext.SaveChangesAsync(),
@@ -271,5 +282,65 @@ public class SdrDebugModule(MenuManager menuManager, TakeoverManager takeoverMan
             .WithContent($"Takeover time is <t:{takeoverManager.TakeoverTimestamp.ToUnixTimeSeconds()}>, which will occur <t:{takeoverManager.TakeoverTimestamp.ToUnixTimeSeconds()}:R>.")
             .WithFlags(MessageFlags.Ephemeral)
         ));
+    }
+
+    [InstanceOwnerPrecondition<ApplicationCommandContext>]
+    [SlashCommand("teto-eliminate", "Reset the server's data.", Contexts = [InteractionContextType.Guild], IntegrationTypes = [ApplicationIntegrationType.GuildInstall],
+        DefaultGuildPermissions = Permissions.Administrator)]
+    public async Task TetoEliminate()
+    {
+        if (Context.Guild is not Guild guild)
+        {
+            await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent("Cannot take over no server!")
+                .WithFlags(MessageFlags.Ephemeral)
+            ));
+            return;
+        }
+
+        TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        SdrServer server = await dbContext.GetOrCreateServerAsync(guild.Id);
+
+        server.PassagesUnlocked = [];
+        server.TakenOver = false;
+        dbContext.Update(server);
+
+        await Task.WhenAll(
+        [
+            dbContext.SaveChangesAsync(),
+            RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent("Reset.")
+                .WithFlags(MessageFlags.Ephemeral)
+            ))
+        ]);
+    }
+
+    [InstanceOwnerPrecondition<ApplicationCommandContext>]
+    [SlashCommand("teto-revive", "Take over a channel that's been liberated before.", Contexts = [InteractionContextType.Guild], IntegrationTypes = [ApplicationIntegrationType.GuildInstall],
+        DefaultGuildPermissions = Permissions.Administrator)]
+    public async Task TetoRevive(Channel channel)
+    {
+        TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        SdrChannel? sdrChannel = dbContext.GetChannel(channel.Id);
+        if (sdrChannel is not SdrChannel { TakenOver: false })
+        {
+            await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent("That channel has not been taken over, or its enemy has not been defeated.")
+                .WithFlags(MessageFlags.Ephemeral)
+            ));
+            return;
+        }
+
+        sdrChannel.TakenOver = true;
+        dbContext.Update(sdrChannel);
+
+        await Task.WhenAll(
+        [
+            dbContext.SaveChangesAsync(),
+            RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent("Revived.")
+                .WithFlags(MessageFlags.Ephemeral)
+            ))
+        ]);
     }
 }
