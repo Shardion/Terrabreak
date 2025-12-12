@@ -24,7 +24,15 @@ public class MenuButtonComponentsModule(MenuManager menuManager, IdentityManager
             return;
         }
 
-        TerrabreakMenu menu = menuManager.Menus[guid];
+        if (!menuManager.Menus.TryGetValue(guid, out TerrabreakMenu? menu))
+        {
+            await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent("This menu has expired. (Run the command again to open a new menu.)")
+                .WithFlags(MessageFlags.Ephemeral)
+            ));
+            return;
+        }
+
         if (menu.AllowedUsers is IReadOnlySet<ulong> allowedUsers)
         {
             if (!allowedUsers.Contains(Context.User.Id))
