@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Gameplay;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Gameplay.Directives;
@@ -37,10 +38,10 @@ public class StationaryMonster : IMonster<StationaryMonsterState>
         return null;
     }
 
-    public IEnumerable<IBattleDirective>? HookPlayerTurnStart(TurnStartInvocation invocation, BattleMonster thisMonster, MonsterState thisState)
+    public IEnumerable<IBattleDirective>? HookPlayerTurnStart(PlayerTurnStartInvocation invocation, BattleMonster thisMonster, MonsterState thisState)
     {
         StationaryMonsterState state = (StationaryMonsterState)thisState;
-        state.FortifyTurnsRemaining -= 1;
+        state.FortifyTurnsRemaining = Math.Max(0, state.FortifyTurnsRemaining - 1);
         return null;
     }
 }
