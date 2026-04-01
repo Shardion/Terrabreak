@@ -55,6 +55,33 @@ namespace Shardion.Terrabreak.Migrations
                     b.ToTable("BagEntry");
                 });
 
+            modelBuilder.Entity("Shardion.Terrabreak.Features.ZannotGoodenough.Player.DiscordPlayer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("DiscordUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EquippedLoadoutIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.PrimitiveCollection<string>("UnlockedMonsterIdentifiers")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.PrimitiveCollection<string>("UnlockedRelicIdentifiers")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DiscordUserId");
+
+                    b.ToTable("DiscordPlayer");
+                });
+
             modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.BagEntry", b =>
                 {
                     b.HasOne("Shardion.Terrabreak.Features.Bags.Bag", "Bag")
@@ -64,6 +91,138 @@ namespace Shardion.Terrabreak.Migrations
                         .IsRequired();
 
                     b.Navigation("Bag");
+                });
+
+            modelBuilder.Entity("Shardion.Terrabreak.Features.ZannotGoodenough.Player.DiscordPlayer", b =>
+                {
+                    b.OwnsOne("Shardion.Terrabreak.Features.ZannotGoodenough.Player.Loadout", "Loadout1", b1 =>
+                        {
+                            b1.Property<Guid>("DiscordPlayerId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster1Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster2Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster3Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic1Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic2Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic3Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic4Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic5Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic6Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("DiscordPlayerId");
+
+                            b1.ToTable("DiscordPlayer");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DiscordPlayerId");
+                        });
+
+                    b.OwnsOne("Shardion.Terrabreak.Features.ZannotGoodenough.Player.Loadout", "Loadout2", b1 =>
+                        {
+                            b1.Property<Guid>("DiscordPlayerId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster1Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster2Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster3Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic1Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic2Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic3Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic4Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic5Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic6Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("DiscordPlayerId");
+
+                            b1.ToTable("DiscordPlayer");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DiscordPlayerId");
+                        });
+
+                    b.OwnsOne("Shardion.Terrabreak.Features.ZannotGoodenough.Player.Loadout", "Loadout3", b1 =>
+                        {
+                            b1.Property<Guid>("DiscordPlayerId")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster1Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster2Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Monster3Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic1Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic2Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic3Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic4Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic5Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.Property<string>("Relic6Identifier")
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("DiscordPlayerId");
+
+                            b1.ToTable("DiscordPlayer");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DiscordPlayerId");
+                        });
+
+                    b.Navigation("Loadout1")
+                        .IsRequired();
+
+                    b.Navigation("Loadout2")
+                        .IsRequired();
+
+                    b.Navigation("Loadout3")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Shardion.Terrabreak.Features.Bags.Bag", b =>

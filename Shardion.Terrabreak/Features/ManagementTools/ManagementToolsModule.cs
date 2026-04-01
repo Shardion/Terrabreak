@@ -1,13 +1,17 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NetCord;
+using NetCord.JsonModels;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
 using Quartz;
+using Shardion.Terrabreak.Features.Documentation;
 using Shardion.Terrabreak.Features.Reminders;
 using Shardion.Terrabreak.Services.Database;
+using Shardion.Terrabreak.Services.Identity;
 
 namespace Shardion.Terrabreak.Features.ManagementTools;
 
@@ -18,6 +22,8 @@ namespace Shardion.Terrabreak.Features.ManagementTools;
 public class ManagementToolsModule(
     IDbContextFactory<TerrabreakDatabaseContext> dbContextFactory,
     ISchedulerFactory schedulerFactory,
+    DocumentationManager documentation,
+    IdentityManager identity,
     RestClient discord)
     : ApplicationCommandModule<ApplicationCommandContext>
 {
@@ -30,6 +36,29 @@ public class ManagementToolsModule(
     )
     {
         await channel.SendMessageAsync(message);
+
+        await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+            .WithContent("Message sent.")
+            .WithFlags(MessageFlags.Ephemeral)
+        ));
+    }
+
+    [SubSlashCommand("zannot-message", "A measure because I need to release this event now!!!")]
+    public async Task ImpersonateChangelog(
+        [SlashCommandParameter(Description = "The channel to send the message in.")]
+        TextChannel channel
+    )
+    {
+        await channel.SendMessageAsync(new MessageProperties()
+            .WithComponents([
+                new ComponentContainerProperties([
+                    new TextDisplayProperties("### The Zannot Stadium has opened!"),
+                    new TextDisplayProperties("President Zan G. Zannot's newest venture makes accessible the incredible world of monster fighting! You can be the first to invest, and you'll definitely make it big!! If you're good enough, you might even be able to defeat the President himself...?!"),
+                    new TextDisplayProperties("Run `/invest` to bring your team to the arena! Competition will be stiff, but the rewards are plentiful—bring them along next time with `/loadout` to climb even higher!"),
+                ])
+            ])
+            .WithFlags(MessageFlags.IsComponentsV2)
+        );
 
         await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
             .WithContent("Message sent.")

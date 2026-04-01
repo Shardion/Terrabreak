@@ -23,20 +23,24 @@ public class DocumentationModule(DocumentationManager documentationManager, Iden
     {
         string? targetVersion = version ?? identity.CurrentVersion;
         if (targetVersion is null)
-            return RespondAsync(InteractionCallback.Message(new InteractionMessageProperties
+        {
+            return RespondAsync(InteractionCallback.Message(new()
                 {
                     Content = "Please specify a version!",
                     Flags = MessageFlags.Ephemeral
                 }
             ));
+        }
 
         if (documentationManager.Changelogs.GetValueOrDefault(targetVersion) is not JsonComponent changelog)
-            return RespondAsync(InteractionCallback.Message(new InteractionMessageProperties
+        {
+            return RespondAsync(InteractionCallback.Message(new()
                 {
                     Content = $"No changelog exists for version `{version}`!",
                     Flags = MessageFlags.Ephemeral
                 }
             ));
+        }
 
         return RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
             .WithComponents([

@@ -7,14 +7,13 @@ namespace Shardion.Terrabreak.Services.Identity;
 public class IdentityManager(ISchedulerFactory schedulerFactory, IdentityOptions options) : ITerrabreakService
 {
     public IdentityOptions Options { get; } = options;
-
     public string? LastSplash { get; set; } = null;
 
     public async Task StartAsync()
     {
         // TODO: Ideally would never touch the DB, but could be made better by only adding the jobs if it doesn't exist
         IScheduler scheduler = await schedulerFactory.GetScheduler();
-        await scheduler.DeleteJob(new JobKey("changeStatusJob", "statusRotation"));
+        await scheduler.DeleteJob(new("changeStatusJob", "statusRotation"));
         IJobDetail job = JobBuilder.Create<ChangeStatusJob>()
             .WithIdentity("changeStatusJob", "statusRotation")
             .Build();
