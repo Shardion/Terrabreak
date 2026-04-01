@@ -110,11 +110,11 @@ public class StadiumVictoryMenu : TerrabreakMenu
         double relicRng = Random.Shared.NextDouble();
         double tierThreeRewardRequirement = _context.TotalRounds switch
         {
-            >= 10 => 0.9,
+            >= 10 => 0.95,
             >= 7 => 0.75,
             >= 5 => 0.50,
             >= 3 => 0.25,
-            >= 0 => 0.1,
+            >= 0 => 0.05,
             _ => throw new ArgumentOutOfRangeException()
         };
         if (relicRng <= tierThreeRewardRequirement)
