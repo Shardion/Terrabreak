@@ -57,7 +57,7 @@ public record DodgingRule(DirectiveSource Source, DodgingInvocation Invocation) 
 
         double rng = Random.Shared.NextDouble();
 
-        if (rng <= Invocation.DodgeChance)
+        if (rng <= Math.Min(0.66, Invocation.DodgeChance))
         {
             Log.Debug("{monster} dodged with {rng}/{chance}.", Invocation.Defender.Monster.Name, rng, Invocation.DodgeChance);
             return new([], true);

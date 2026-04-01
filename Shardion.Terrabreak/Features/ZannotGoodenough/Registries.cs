@@ -73,6 +73,7 @@ public static class Registries
         new LineBreaker(),
         new PlagueMaster(),
         new Staua(),
+        new StationaryMonster(),
     ]);
 
     public static FrozenSet<string> BattleStartQuotes { get; } = new List<string>([

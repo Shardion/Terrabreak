@@ -15,7 +15,7 @@ public class AllTheRules : IRelic<RelicState>
         "Let's see what kind of trouble we can get ourselves into...";
     public IRelicSeries Series => Registries.RelicSeries.Forward["PresidentZannotFinest"];
     public string EffectDescription =>
-        "Friendly Rodent-class monsters and Blunt-character monsters have a 33% chance to dodge attacks, and +1 DEF.";
+        "Friendly Rodent-class monsters and Blunt-character monsters have a 25% chance to dodge attacks, and +1 DEF.";
 
     public IEnumerable<RelicDomainPart> Domain =>
     [
@@ -39,7 +39,7 @@ public class AllTheRules : IRelic<RelicState>
             foreach (BattleMonster monster in applicableMonsters)
             {
                 double before = monster.State.DodgeChance;
-                monster.State.DodgeChance += 0.33;
+                monster.State.DodgeChance += 0.25;
                 monster.State.DefenseStaticModifier += 1;
                 Log.Debug("All The Rules increased {monster}'s dodge chance from {before} to {after}.", monster, before, monster.State.DodgeChance);
             }

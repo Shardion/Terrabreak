@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Gameplay;
@@ -19,9 +20,21 @@ public class Loadout
     public string? Relic5Identifier { get; set; }
     public string? Relic6Identifier { get; set; }
 
+    [NotMapped]
+    public string?[] RelicIdentifiers =>
+    [
+        Relic1Identifier, Relic2Identifier, Relic3Identifier, Relic4Identifier, Relic5Identifier, Relic6Identifier
+    ];
+
     public string? Monster1Identifier { get; set; }
     public string? Monster2Identifier { get; set; }
     public string? Monster3Identifier { get; set; }
+
+    [NotMapped]
+    public string?[] MonsterIdentifiers =>
+    [
+        Monster1Identifier, Monster2Identifier, Monster3Identifier,
+    ];
 
     public IEnumerable<string> GetRelicIdentifierEnumerator()
     {
@@ -115,30 +128,31 @@ public class Loadout
     public static string ProduceLoadoutLine(EmojiManager emoji, Loadout loadout)
     {
         StringBuilder b = new();
-        int addedMonsters = 0;
-        foreach (IMonster<MonsterState> monster in loadout.GetMonsterEnumerator())
+        foreach (string? monsterId in loadout.MonsterIdentifiers)
         {
-            b.Append(IMonster<MonsterState>.ProduceClassificationIcon(emoji, monster));
-            addedMonsters++;
+            if (monsterId is not null)
+            {
+                IMonster<MonsterState> monster = Registries.Monsters.Forward[monsterId];
+                b.Append(IMonster<MonsterState>.ProduceClassificationIcon(emoji, monster));
+            }
+            else
+            {
+                b.Append(emoji.GetEmoji("noitem"));
+            }
         }
-        for (int i = addedMonsters; i < 3; i++)
-        {
-            b.Append(emoji.GetEmoji("noitem"));
-        }
-
         b.Append("   ⁄ ⁄   ");
-
-        int addedRelics = 0;
-        foreach (IRelic<RelicState> relic in loadout.GetRelicEnumerator())
+        foreach (string? relicId in loadout.RelicIdentifiers)
         {
-            b.Append(emoji.GetEmoji(relic.Series.EmojiIdentifier));
-            addedRelics++;
+            if (relicId is not null)
+            {
+                IRelic<RelicState> relic = Registries.Relics.Forward[relicId];
+                b.Append(emoji.GetEmoji(relic.Series.EmojiIdentifier));
+            }
+            else
+            {
+                b.Append(emoji.GetEmoji("noitem"));
+            }
         }
-        for (int i = addedRelics; i < 6; i++)
-        {
-            b.Append(emoji.GetEmoji("noitem"));
-        }
-
         return b.ToString();
     }
 }

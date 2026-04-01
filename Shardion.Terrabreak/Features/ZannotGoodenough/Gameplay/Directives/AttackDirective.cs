@@ -33,7 +33,22 @@ public record AttackDirective(DirectiveSource Source, AttackInvocation Invocatio
 
     public IEnumerable<IBattleDirective>? FireInterceptors()
     {
-        return [];
+        List<IBattleDirective> directives = [];
+        foreach (BattleMonster friendlyMonster in Invocation.AttackingPlayer.GetMonsterEnumerator())
+        {
+            if (friendlyMonster.Monster.InterceptAttack(Invocation, friendlyMonster, friendlyMonster.Monster.CastState(friendlyMonster.State)) is IEnumerable<IBattleDirective> hookDirectives)
+            {
+                directives.AddRange(hookDirectives);
+            }
+        }
+        foreach (BattleMonster enemyMonster in Invocation.DefendingPlayer.GetMonsterEnumerator())
+        {
+            if (enemyMonster.Monster.InterceptAttack(Invocation, enemyMonster, enemyMonster.Monster.CastState(enemyMonster.State)) is IEnumerable<IBattleDirective> hookDirectives)
+            {
+                directives.AddRange(hookDirectives);
+            }
+        }
+        return directives;
     }
 
     public IEnumerable<IBattleDirective>? Execute()

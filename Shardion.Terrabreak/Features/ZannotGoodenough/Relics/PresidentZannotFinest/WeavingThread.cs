@@ -11,7 +11,7 @@ public class WeavingThread : IRelic<RelicState>
     public string Name => "'Weaving Thread'";
     public string Description => "Binds us all.";
     public IRelicSeries Series => Registries.RelicSeries.Forward["PresidentZannotFinest"];
-    public string EffectDescription => "The friendly monster in the first loadout slot gains +3 ATK.";
+    public string EffectDescription => "The friendly monster in the first loadout slot has +3 ATK and -1 DEF.";
     public IEnumerable<RelicDomainPart> Domain =>
     [
         new(RelicCategory.Attack, 1),
@@ -27,6 +27,7 @@ public class WeavingThread : IRelic<RelicState>
             }
 
             player.Monster1?.State.AttackStaticModifier += 3;
+            player.Monster1?.State.DefenseStaticModifier -= 1;
         }
 
         return null;

@@ -53,22 +53,27 @@ public class EditLoadoutMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCont
             new TextDisplayProperties("### Edit Loadout Monsters"),
         ];
 
-        List<IMonster<MonsterState>> monsters = loadout.GetMonsterEnumerator().ToList();
-        int monstersAdded = 0;
-        foreach (IMonster<MonsterState> monster in monsters)
+        for (int monsterIndex = 0; monsterIndex < loadout.MonsterIdentifiers.Length; monsterIndex++)
         {
-            components.Add(new ComponentSectionProperties(
-                new ButtonProperties($"menu:{MenuGuid}:monster:{monstersAdded}", "Edit", ButtonStyle.Secondary),
-                [new TextDisplayProperties($"{monstersAdded + 1}. {IMonster<MonsterState>.ProduceClassificationIcon(emoji, monster)} {monster.Name}")]
-            ));
-            monstersAdded++;
-        }
-        for (int monsterFillIndex = monstersAdded; monsterFillIndex < 3; monsterFillIndex++)
-        {
-            components.Add(new ComponentSectionProperties(
-                new ButtonProperties($"menu:{MenuGuid}:monster:{monsterFillIndex}", "Edit", ButtonStyle.Secondary),
-                [new TextDisplayProperties($"-# {monsterFillIndex + 1}. {emoji.GetEmoji("noitem")} (no monster)")]
-            ));
+            string? monsterId = loadout.MonsterIdentifiers[monsterIndex];
+            if (monsterId is not null)
+            {
+                IMonster<MonsterState> monster = Registries.Monsters.Forward[monsterId];
+                components.Add(new ComponentSectionProperties(
+                    new ButtonProperties($"menu:{MenuGuid}:monster:{monsterIndex}", "Edit", ButtonStyle.Secondary),
+                    [
+                        new TextDisplayProperties(
+                            $"{monsterIndex + 1}. {IMonster<MonsterState>.ProduceClassificationIcon(emoji, monster)} {monster.Name}")
+                    ]
+                ));
+            }
+            else
+            {
+                components.Add(new ComponentSectionProperties(
+                    new ButtonProperties($"menu:{MenuGuid}:monster:{monsterIndex}", "Edit", ButtonStyle.Secondary),
+                    [new TextDisplayProperties($"-# {monsterIndex + 1}. {emoji.GetEmoji("noitem")} (no monster)")]
+                ));
+            }
         }
 
         return components;
@@ -80,23 +85,30 @@ public class EditLoadoutMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCont
             new TextDisplayProperties("### Edit Loadout Relics"),
         ];
 
-        List<IRelic<RelicState>> relics = loadout.GetRelicEnumerator().ToList();
-        int relicsAdded = 0;
-        foreach (IRelic<RelicState> relic in relics)
+
+        for (int relicIndex = 0; relicIndex < loadout.RelicIdentifiers.Length; relicIndex++)
         {
-            components.Add(new ComponentSectionProperties(
-                new ButtonProperties($"menu:{MenuGuid}:relic:{relicsAdded}", "Edit", ButtonStyle.Secondary),
-                [new TextDisplayProperties($"{relicsAdded + 1}. {emoji.GetEmoji(relic.Series.EmojiIdentifier)} {relic.Name}")]
-            ));
-            relicsAdded++;
+            string? relicId = loadout.RelicIdentifiers[relicIndex];
+            if (relicId is not null)
+            {
+                IRelic<RelicState> relic = Registries.Relics.Forward[relicId];
+                components.Add(new ComponentSectionProperties(
+                    new ButtonProperties($"menu:{MenuGuid}:relic:{relicIndex}", "Edit", ButtonStyle.Secondary),
+                    [
+                        new TextDisplayProperties(
+                            $"{relicIndex + 1}. {emoji.GetEmoji(relic.Series.EmojiIdentifier)} {relic.Name}")
+                    ]
+                ));
+            }
+            else
+            {
+                components.Add(new ComponentSectionProperties(
+                    new ButtonProperties($"menu:{MenuGuid}:relic:{relicIndex}", "Edit", ButtonStyle.Secondary),
+                    [new TextDisplayProperties($"-# {relicIndex + 1}. {emoji.GetEmoji("noitem")} (no relic)")]
+                ));
+            }
         }
-        for (int relicFillIndex = relicsAdded; relicFillIndex < 6; relicFillIndex++)
-        {
-            components.Add(new ComponentSectionProperties(
-                new ButtonProperties($"menu:{MenuGuid}:relic:{relicFillIndex}", "Edit", ButtonStyle.Secondary),
-                [new TextDisplayProperties($"-# {relicFillIndex + 1}. {emoji.GetEmoji("noitem")} (no relic)")]
-            ));
-        }
+
         return components;
     }
 

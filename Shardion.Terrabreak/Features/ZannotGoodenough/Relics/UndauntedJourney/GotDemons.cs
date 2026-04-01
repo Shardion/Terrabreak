@@ -33,7 +33,7 @@ public class GotDemons : IRelic<RelicState>
                 .Where(monster => monster.Monster.Classification == MonsterClassification.Spirit);
             foreach (BattleMonster monster in applicableMonsters)
             {
-                monster.State.DodgeChance += 0.5;
+                monster.State.DodgeChance += 0.25;
             }
         }
 

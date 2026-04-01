@@ -47,7 +47,7 @@ public class ChooseMonsterMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCo
             new TextDisplayProperties($"### {IMonster<MonsterState>.ProduceClassificationIcon(emoji, monster)} {monster.Name}"),
             new TextDisplayProperties($"HP: **{monster.BaseHealth}**   ⁄ ⁄   ATK: **{monster.BaseAttack}**   ⁄ ⁄   DEF: **{monster.BaseDefense}**"),
             new TextDisplayProperties($"Classification: **{monster.Classification.ToString()}**\nCharacteristic: **{monster.Characteristic.ToString()}**"),
-            new TextDisplayProperties($"Likes ability: **{monster.LikesAbility.Name}** ({monster.LikesAbility.BaseLikesCost} likes).\n{monster.LikesAbility.Description}"),
+            new TextDisplayProperties($"Likes ability: **{monster.LikesAbility.Name}** ({monster.LikesAbility.BaseLikesCost} Likes).\n{monster.LikesAbility.Description}"),
             new TextDisplayProperties($"-#   ⁄ ⁄   *'{monster.Description}'*"),
             new ComponentSeparatorProperties(),
             new ActionRowProperties([
@@ -83,6 +83,8 @@ public class ChooseMonsterMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCo
                     ])
             ]));
 
+        Log.Debug("Pages: 0/{cur}/{max}.", PageNumber, totalPages);
+
         IEnumerable<IMonster<MonsterState>> pageEntries = Monsters.Skip(PageNumber * PageEntryCount).Take(10);
 
         List<IComponentContainerComponentProperties> components = [
@@ -97,10 +99,19 @@ public class ChooseMonsterMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCo
             ));
         }
 
-        components.AddRange(
-            new ComponentSeparatorProperties(),
-            new ActionRowProperties([new ButtonProperties($"menu:{MenuGuid}:back", "Back", ButtonStyle.Secondary)])
-        );
+        components.Add(new ComponentSeparatorProperties());
+        ActionRowProperties controls = [];
+        if (totalPages > 1)
+        {
+            controls.Add(new ButtonProperties($"menu:{MenuGuid}:page-previous", EmojiProperties.Custom(1417540510003757056),
+                        ButtonStyle.Secondary)
+                    .WithDisabled(PageNumber + 1 <= 1));
+            controls.Add(new ButtonProperties($"menu:{MenuGuid}:page-next", EmojiProperties.Custom(1417540508494073876),
+                        ButtonStyle.Secondary)
+                    .WithDisabled(PageNumber + 1 >= totalPages));
+        }
+        controls.Add(new ButtonProperties($"menu:{MenuGuid}:back", "Back", ButtonStyle.Secondary));
+        components.Add(controls);
 
         return Task.FromResult(new MenuMessage([
             new ComponentContainerProperties(components)
@@ -125,6 +136,31 @@ public class ChooseMonsterMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCo
             await ReplaceMenuAsync(context, menu, returnTo);
             return;
         }
+        if (splitCustomId.Last() == "page-next")
+        {
+            PageNumber++;
+            Log.Debug("Paging to {num}.", PageNumber);
+            MenuMessage newMessage = await BuildMessage();
+            await RespondAsync(context, InteractionCallback.ModifyMessage(responseMessage => responseMessage
+                .WithAttachments(newMessage.Attachments)
+                .WithComponents(newMessage.Components)
+                .WithFlags(newMessage.Flags | MessageFlags.IsComponentsV2)
+                .WithAllowedMentions(newMessage.AllowedMentions)));
+            return;
+        }
+        if (splitCustomId.Last() == "page-previous")
+        {
+            PageNumber--;
+            Log.Debug("Paging to {num}.", PageNumber);
+            MenuMessage newMessage = await BuildMessage();
+            await RespondAsync(context, InteractionCallback.ModifyMessage(responseMessage => responseMessage
+                .WithAttachments(newMessage.Attachments)
+                .WithComponents(newMessage.Components)
+                .WithFlags(newMessage.Flags | MessageFlags.IsComponentsV2)
+                .WithAllowedMentions(newMessage.AllowedMentions)));
+            return;
+        }
+
         if (SelectedMonster is not null)
         {
             if (splitCustomId.Last() == "confirm")

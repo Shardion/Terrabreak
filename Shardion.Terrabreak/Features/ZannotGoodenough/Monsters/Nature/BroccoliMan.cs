@@ -13,7 +13,7 @@ public class BroccoliMan : IMonster<MonsterState>
     public MonsterCharacteristic Characteristic => MonsterCharacteristic.Haunting;
 
     public int BaseHealth => 16;
-    public int BaseAttack => 2;
+    public int BaseAttack => 1;
     public int BaseDefense => 2;
 
     public ILikesAbility<MonsterState> LikesAbility { get; } = new LikesAbilityWhereToFindIt();

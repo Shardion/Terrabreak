@@ -17,6 +17,8 @@ public class BattleLoadout
     public BattleRelic? Relic3 { get; set; }
     public BattleRelic? Relic4 { get; set; }
 
+    public BattleRelic?[] Relics => [Relic1, Relic2, Relic3, Relic4];
+
     public IEnumerable<BattleRelic> GetRelicEnumerator()
     {
         if (Relic1 is not null)
@@ -60,6 +62,8 @@ public class BattleLoadout
     public BattleMonster? Monster1 { get; set; }
     public BattleMonster? Monster2 { get; set; }
     public BattleMonster? Monster3 { get; set; }
+
+    public BattleMonster?[] Monsters => [Monster1, Monster2, Monster3];
 
     public IEnumerable<BattleMonster> GetMonsterEnumerator()
     {
@@ -115,30 +119,29 @@ public class BattleLoadout
     public static string ProduceLoadoutLine(EmojiManager emoji, BattleLoadout loadout)
     {
         StringBuilder b = new();
-        int addedMonsters = 0;
-        foreach (BattleMonster monster in loadout.GetMonsterEnumerator())
+        foreach (BattleMonster? monster in loadout.Monsters)
         {
-            b.Append(BattleMonster.ProduceClassificationIcon(emoji, monster));
-            addedMonsters++;
+            if (monster is not null)
+            {
+                b.Append(BattleMonster.ProduceClassificationIcon(emoji, monster));
+            }
+            else
+            {
+                b.Append(emoji.GetEmoji("noitem"));
+            }
         }
-        for (int i = addedMonsters; i < 3; i++)
-        {
-            b.Append(emoji.GetEmoji("noitem"));
-        }
-
         b.Append("   ⁄ ⁄   ");
-
-        int addedRelics = 0;
-        foreach (BattleRelic relic in loadout.GetRelicEnumerator())
+        foreach (BattleRelic? relic in loadout.Relics)
         {
-            b.Append(emoji.GetEmoji(relic.Relic.Series.EmojiIdentifier));
-            addedRelics++;
+            if (relic is not null)
+            {
+                b.Append(emoji.GetEmoji(relic.Relic.Series.EmojiIdentifier));
+            }
+            else
+            {
+                b.Append(emoji.GetEmoji("noitem"));
+            }
         }
-        for (int i = addedRelics; i < 4; i++)
-        {
-            b.Append(emoji.GetEmoji("noitem"));
-        }
-
         return b.ToString();
     }
 

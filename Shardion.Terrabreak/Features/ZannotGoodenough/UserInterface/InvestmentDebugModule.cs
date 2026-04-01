@@ -130,4 +130,27 @@ public class InvestmentDebugModule(IDbContextFactory<TerrabreakDatabaseContext> 
 
         await Task.WhenAll(sendResponseTask, saveTask);
     }
+
+    [SubSlashCommand("clear", "Clear a profile.")]
+    public async Task Clear(User user)
+    {
+        TerrabreakDatabaseContext dbContext = await dbContextFactory.CreateDbContextAsync();
+        if (dbContext.GetPlayer(options.Get<ZannotGoodenoughOptions>(), user) is not DiscordPlayer player)
+        {
+            await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+                .WithContent($"<@{user.Id}> doesn't have player data associated!")
+                .WithFlags(MessageFlags.Ephemeral)
+            ));
+            return;
+        }
+
+        dbContext.Set<DiscordPlayer>().Remove(player);
+        Task saveTask = dbContext.SaveChangesAsync();
+        Task sendResponseTask = RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
+            .WithContent($"Cleared <@{user.Id}>.")
+            .WithFlags(MessageFlags.Ephemeral)
+        ));
+
+        await Task.WhenAll(sendResponseTask, saveTask);
+    }
 }

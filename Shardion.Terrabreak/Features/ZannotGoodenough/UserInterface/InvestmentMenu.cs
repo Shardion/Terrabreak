@@ -55,16 +55,21 @@ public class InvestmentMenu(Battle battle, IdentityManager identity, EmojiManage
 
         if (_resolution is not null)
         {
+            string lines = "";
+            if (battle.Lines.Count > 0)
+            {
+                lines = "\n-# \u2044 \u2044  " + string.Join("\n-# \u2044 \u2044  ", battle.Lines);
+            }
             if (returnTo is not null && _resolution.Winner == battle.Player1)
             {
                 components.Add(new ComponentSectionProperties(
                     new ButtonProperties($"menu:{MenuGuid}:continue", "Continue", ButtonStyle.Success),
-                    [new TextDisplayProperties($"-# \u2044 \u2044  A winner is **{_resolution.Winner.Player.Name}**!!")]
+                    [new TextDisplayProperties($"-# \u2044 \u2044  A winner is **{_resolution.Winner.Player.Name}**!!{lines}")]
                 ));
             }
             else
             {
-                components.Add(new TextDisplayProperties($"-# \u2044 \u2044  A winner is **{_resolution.Winner.Player.Name}**!!"));
+                components.Add(new TextDisplayProperties($"-# \u2044 \u2044  A winner is **{_resolution.Winner.Player.Name}**!!{lines}"));
             }
         }
         else if (_nextTurnTime is not null)

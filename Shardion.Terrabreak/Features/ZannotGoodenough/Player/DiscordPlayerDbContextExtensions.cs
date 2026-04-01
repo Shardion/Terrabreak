@@ -144,7 +144,7 @@ public static class DiscordPlayerDbContextExtensions
         DiscordPlayer player;
         if (options.PresidentZannotUserId == uid)
         {
-            IRelicSeries tricksOfTheTrade = Registries.RelicSeries.Forward["InvestorCore"];
+            IRelicSeries tricksOfTheTrade = Registries.RelicSeries.Forward["TricksOfTheTrade"];
             IEnumerable<IRelic<RelicState>> tricksOfTheTradeRelics = Registries.Relics.Contents.Where(relic => relic.Series == tricksOfTheTrade);
             List<string> startingRelics = investorCoreRelics.Select(relic => relic.InternalName).ToList();
             startingRelics.AddRange(tricksOfTheTradeRelics.Select(relic => relic.InternalName));

@@ -54,6 +54,11 @@ public interface IMonster<out TState> : INamedEntity where TState: MonsterState,
         return null;
     }
 
+    public IEnumerable<IBattleDirective>? InterceptAttack(AttackInvocation invocation, BattleMonster thisMonster, MonsterState thisState)
+    {
+        return null;
+    }
+
     public IEnumerable<IBattleDirective>? HookTurnStart(TurnStartInvocation invocation, BattleMonster thisMonster,
         MonsterState thisState)
     {

@@ -12,7 +12,7 @@ public class OverpoweringBlizzard : IRelic<RelicState>
     public string Name => "Overpowering Blizzard";
     public string Description => "Surely the work of the once-feared Blizzard Pig!";
     public IRelicSeries Series => Registries.RelicSeries.Forward["InvestorCore"];
-    public string EffectDescription => "Friendly Haunting-character and Blasting-character monsters gain +4 ATK.";
+    public string EffectDescription => "Friendly Haunting-character and Blasting-character monsters gain +2 ATK.";
     public IEnumerable<RelicDomainPart> Domain =>
     [
         new(RelicCategory.HauntingCharacter, 0.5),
@@ -32,7 +32,7 @@ public class OverpoweringBlizzard : IRelic<RelicState>
             {
                 if (monster.Monster.Characteristic is MonsterCharacteristic.Haunting or MonsterCharacteristic.Blasting)
                 {
-                    monster.State.AttackStaticModifier += 4;
+                    monster.State.AttackStaticModifier += 2;
                 }
             }
         }

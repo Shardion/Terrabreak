@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using NetCord;
 using NetCord.Rest;
 using NetCord.Services.ComponentInteractions;
+using Serilog;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Monsters;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Player;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Relics;
@@ -68,6 +69,8 @@ public class ChooseRelicMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCont
         if (PageNumber + 1 > totalPages) PageNumber = totalPages - 1;
         if (PageNumber < 0) PageNumber = 0;
 
+        Log.Debug("Pages: 0/{cur}/{max}.", PageNumber, totalPages - 1);
+
         if (totalPages <= 0)
             return Task.FromResult(new MenuMessage([
                 new ComponentContainerProperties()
@@ -94,10 +97,19 @@ public class ChooseRelicMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCont
             ));
         }
 
-        components.AddRange(
-            new ComponentSeparatorProperties(),
-            new ActionRowProperties([new ButtonProperties($"menu:{MenuGuid}:back", "Back", ButtonStyle.Secondary)])
-        );
+        components.Add(new ComponentSeparatorProperties());
+        ActionRowProperties controls = [];
+        if (totalPages > 1)
+        {
+            controls.Add(new ButtonProperties($"menu:{MenuGuid}:page-previous", EmojiProperties.Custom(1417540510003757056),
+                    ButtonStyle.Secondary)
+                .WithDisabled(PageNumber + 1 <= 1));
+            controls.Add(new ButtonProperties($"menu:{MenuGuid}:page-next", EmojiProperties.Custom(1417540508494073876),
+                    ButtonStyle.Secondary)
+                .WithDisabled(PageNumber + 1 >= totalPages));
+        }
+        controls.Add(new ButtonProperties($"menu:{MenuGuid}:back", "Back", ButtonStyle.Secondary));
+        components.Add(controls);
 
         return Task.FromResult(new MenuMessage([
             new ComponentContainerProperties(components)
@@ -121,6 +133,30 @@ public class ChooseRelicMenu(IDbContextFactory<TerrabreakDatabaseContext> dbCont
         if (splitCustomId.Last() == "back")
         {
             await ReplaceMenuAsync(context, menu, returnTo);
+            return;
+        }
+        if (splitCustomId.Last() == "page-next")
+        {
+            PageNumber++;
+            Log.Debug("Paging to {num}.", PageNumber);
+            MenuMessage newMessage = await BuildMessage();
+            await RespondAsync(context, InteractionCallback.ModifyMessage(responseMessage => responseMessage
+                .WithAttachments(newMessage.Attachments)
+                .WithComponents(newMessage.Components)
+                .WithFlags(newMessage.Flags | MessageFlags.IsComponentsV2)
+                .WithAllowedMentions(newMessage.AllowedMentions)));
+            return;
+        }
+        if (splitCustomId.Last() == "page-previous")
+        {
+            PageNumber--;
+            Log.Debug("Paging to {num}.", PageNumber);
+            MenuMessage newMessage = await BuildMessage();
+            await RespondAsync(context, InteractionCallback.ModifyMessage(responseMessage => responseMessage
+                .WithAttachments(newMessage.Attachments)
+                .WithComponents(newMessage.Components)
+                .WithFlags(newMessage.Flags | MessageFlags.IsComponentsV2)
+                .WithAllowedMentions(newMessage.AllowedMentions)));
             return;
         }
         if (SelectedRelic is not null)

@@ -60,29 +60,6 @@ public class LikesAbilitySkeletonWar : ILikesAbility<MisterBonesState>
     {
         MisterBonesState state = (MisterBonesState)arguments.UserState;
         state.DefAddTurnsRemaining += 4;
-
-        List<BattleMonster> misterBones = arguments.EnemyPlayer.GetMonsterEnumerator()
-            .Where(monster => monster.Monster.InternalName == arguments.User.Monster.InternalName
-                              && !BattleRules.CheckKnockout(monster))
-            .ToList();
-        if (misterBones.Count > 0)
-        {
-            misterBones.AddRange(arguments.FriendlyPlayer.GetMonsterEnumerator()
-                .Where(monster => monster.Monster.InternalName == arguments.User.Monster.InternalName
-                                  && !BattleRules.CheckKnockout(monster)));
-            foreach (BattleMonster misterBonesSingular in misterBones)
-            {
-                misterBonesSingular.State.CurrentHealth = 0;
-            }
-
-            return
-            [
-                new LogLineDirective(
-                    new(this, null, arguments.User),
-                    new("The Mister Bones have gone to war!!")
-                )
-            ];
-        }
         return null;
     }
 }

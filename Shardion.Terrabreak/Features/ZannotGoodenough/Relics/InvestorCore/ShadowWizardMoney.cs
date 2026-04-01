@@ -12,7 +12,7 @@ public class ShadowWizardMoney : IRelic<RelicState>
     public IRelicSeries Series => Registries.RelicSeries.Forward["InvestorCore"];
     public string Description => "We love casting spells!!";
     public string EffectDescription =>
-        "Spirit-class monsters generate 4 Likes when attacking, or 8 Likes when attacking a Spirit-class or Machina-class monster.";
+        "Spirit-class monsters generate 2 Likes when attacking, or 4 Likes when attacking a Spirit-class or Machina-class monster.";
     public IEnumerable<RelicDomainPart> Domain =>
     [
         new(RelicCategory.SpiritMonster, 0.5),
@@ -23,11 +23,11 @@ public class ShadowWizardMoney : IRelic<RelicState>
     {
         if (invocation.Attacker.Monster.Classification is MonsterClassification.Spirit)
         {
-            int likes = 4;
+            int likes = 2;
             if (invocation.Defender.Monster.Classification is MonsterClassification.Spirit
                 or MonsterClassification.Machina)
             {
-                likes += 4;
+                likes += 2;
             }
 
             return
