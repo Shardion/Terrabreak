@@ -73,6 +73,7 @@ public static class Registries
         new LineBreaker(),
         new PlagueMaster(),
         new Staua(),
+        new Silkseeker(),
         new StationaryMonster(),
     ]);
 

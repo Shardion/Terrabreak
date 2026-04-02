@@ -36,7 +36,7 @@ public class MisterBones : IMonster<MisterBonesState>
         return null;
     }
 
-    public IEnumerable<IBattleDirective>? HookPlayerTurnStart(TurnStartInvocation invocation, BattleMonster thisMonster, MonsterState thisState)
+    public IEnumerable<IBattleDirective>? HookPlayerTurnStart(PlayerTurnStartInvocation invocation, BattleMonster thisMonster, MonsterState thisState)
     {
         MisterBonesState state = (MisterBonesState)thisState;
         state.DefAddTurnsRemaining = Math.Max(0, state.DefAddTurnsRemaining - 1);

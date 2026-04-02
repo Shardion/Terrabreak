@@ -37,7 +37,7 @@ public class PlagueMaster : IMonster<PlagueMasterState>
         return null;
     }
 
-    public IEnumerable<IBattleDirective>? HookPlayerTurnStart(TurnStartInvocation invocation, BattleMonster thisMonster, MonsterState thisState)
+    public IEnumerable<IBattleDirective>? HookPlayerTurnStart(PlayerTurnStartInvocation invocation, BattleMonster thisMonster, MonsterState thisState)
     {
         PlagueMasterState state = (PlagueMasterState)thisState;
         state.DefZeroTurnsRemaining = Math.Max(0, state.DefZeroTurnsRemaining - 1);

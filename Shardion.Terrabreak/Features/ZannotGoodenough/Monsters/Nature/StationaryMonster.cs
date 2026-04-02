@@ -22,7 +22,7 @@ public class StationaryMonster : IMonster<StationaryMonsterState>
     {
         if (invocation.Defender == thisMonster)
         {
-            Log.Debug("Defending against attack from {attackerplayer}'s {attacker}.", invocation.AttackingPlayer, invocation.Attacker);
+            Log.Debug("Defending against attack from {attackerplayer}'s {attacker}.", invocation.AttackingPlayer.Player.Name, invocation.Attacker.Monster.Name);
             StationaryMonsterState state = (StationaryMonsterState)thisState;
             if (state.FortifyTurnsRemaining > 0)
             {

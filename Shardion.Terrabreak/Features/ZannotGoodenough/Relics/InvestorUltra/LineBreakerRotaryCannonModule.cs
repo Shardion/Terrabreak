@@ -15,7 +15,7 @@ public class LineBreakerRotaryCannonModule : IRelic<RelicState>
     public IRelicSeries Series => Registries.RelicSeries.Forward["InvestorUltra"];
 
     public string EffectDescription =>
-        "Machina-class monsters and Blasting-character monsters have the cost of their Likes abilities ×0.5.";
+        "Machina-class monsters and Blasting-character monsters have the cost of their Likes abilities -50%.";
     public IEnumerable<RelicDomainPart> Domain =>
     [
         new(RelicCategory.Likes, 0.5),

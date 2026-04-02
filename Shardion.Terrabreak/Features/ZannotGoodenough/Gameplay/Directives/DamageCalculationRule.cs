@@ -12,6 +12,20 @@ public record DamageCalculationRule(DirectiveSource Source, DamageCalculationInv
     public IEnumerable<DamageCalculationInvocation> FireHooks()
     {
         List<DamageCalculationInvocation> invocations = [];
+        foreach (BattleMonster friendlyMonster in Invocation.AttackingPlayer.GetMonsterEnumerator())
+        {
+            if (friendlyMonster.Monster.HookDamageCalculation(Invocation, friendlyMonster, friendlyMonster.Monster.CastState(friendlyMonster.State)) is DamageCalculationInvocation hookInvocation)
+            {
+                invocations.Add(hookInvocation);
+            }
+        }
+        foreach (BattleMonster enemyMonster in Invocation.DefendingPlayer.GetMonsterEnumerator())
+        {
+            if (enemyMonster.Monster.HookDamageCalculation(Invocation, enemyMonster, enemyMonster.Monster.CastState(enemyMonster.State)) is DamageCalculationInvocation hookInvocation)
+            {
+                invocations.Add(hookInvocation);
+            }
+        }
         foreach (BattleRelic friendlyRelic in Invocation.AttackingPlayer.GetRelicEnumerator())
         {
             if (friendlyRelic.Relic.HookDamageCalculation(Invocation, friendlyRelic, friendlyRelic.Relic.CastState(friendlyRelic.State)) is DamageCalculationInvocation hookInvocation)

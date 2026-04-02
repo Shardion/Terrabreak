@@ -10,7 +10,23 @@ public record LikesCostRule(DirectiveSource Source, LikesCostInvocation<MonsterS
 {
     public IEnumerable<LikesCostInvocation<MonsterState>> FireHooks()
     {
-        return [];
+        List<LikesCostInvocation<MonsterState>> invocations = [];
+        foreach (BattleRelic friendlyRelic in Invocation.FriendlyPlayer.GetRelicEnumerator())
+        {
+            if (friendlyRelic.Relic.HookLikesCost(Invocation, friendlyRelic, friendlyRelic.Relic.CastState(friendlyRelic.State)) is LikesCostInvocation<MonsterState> hookInvocation)
+            {
+                invocations.Add(hookInvocation);
+            }
+        }
+        foreach (BattleRelic enemyRelic in Invocation.EnemyPlayer.GetRelicEnumerator())
+        {
+            if (enemyRelic.Relic.HookLikesCost(Invocation, enemyRelic, enemyRelic.Relic.CastState(enemyRelic.State)) is LikesCostInvocation<MonsterState> hookInvocation)
+            {
+                invocations.Add(hookInvocation);
+            }
+        }
+
+        return invocations;
     }
 
     public IEnumerable<LikesCostResult> FireInterceptors()
