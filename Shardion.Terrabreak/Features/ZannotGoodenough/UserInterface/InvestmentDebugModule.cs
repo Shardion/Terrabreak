@@ -36,18 +36,14 @@ public class InvestmentDebugModule(IDbContextFactory<TerrabreakDatabaseContext> 
         BattleLoadout playerOne = new()
         {
             Player = invokingPlayer,
-            Monster1 = new(new RazRat()),
-            Monster2 = new(new LineBreaker()),
-            Monster3 = new(new Nanite()),
-            Relic1 = new(new BlurayBlastingBomb()),
-            Relic2 = new(new FocusHarder()),
+            Likes = 40,
+            Monster1 = new(new StationaryMonster()),
+            Relic1 = new(new ShadowWizardMoney()),
         };
         BattleLoadout playerTwo = new()
         {
             Player = new ComputerPlayer(),
-            Monster1 = new(new RazRat()),
-            Monster2 = new(new LineBreaker()),
-            Monster3 = new(new Nanite()),
+            Monster1 = new(new BlueEyesWhiteDragon()),
             Relic1 = new(new BlurayBlastingBomb()),
             Relic2 = new(new FocusHarder()),
         };

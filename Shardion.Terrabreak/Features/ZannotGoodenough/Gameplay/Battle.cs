@@ -60,6 +60,16 @@ public class Battle
 
     public BattleResolution? PlayerTurn(BattleLoadout attacker, BattleLoadout defender)
     {
+        BattleResolution? startResolution = RunDirectives([
+            new PlayerTurnStartDirective(
+                new(this, null, null),
+                new(this, attacker, defender)
+            )
+        ]);
+        if (startResolution is not null)
+        {
+            return startResolution;
+        }
         if (Player1.Player is ComputerPlayer)
         {
             if ((Cpu1Intent is null || BattleRules.CheckKnockout(Cpu1Intent.MonsterUsingAbility)) && Player1.GetMonsterEnumerator().Shuffle().FirstOrDefault() is BattleMonster randomMonster)
@@ -92,6 +102,7 @@ public class Battle
                 {
                     return resolution;
                 }
+                continue;
             }
             if (Player2Intent is PlayerLikesAbilityIntent player2Intent && player2Intent.MonsterUsingAbility == attackingMonster)
             {
@@ -101,6 +112,7 @@ public class Battle
                 {
                     return resolution;
                 }
+                continue;
             }
             if (Cpu1Intent is PlayerLikesAbilityIntent cpu1Intent && cpu1Intent.MonsterUsingAbility == attackingMonster)
             {
@@ -117,6 +129,7 @@ public class Battle
                     {
                         return resolution;
                     }
+                    continue;
                 }
             }
             if (Cpu2Intent is PlayerLikesAbilityIntent cpu2Intent && cpu2Intent.MonsterUsingAbility == attackingMonster)
@@ -134,6 +147,7 @@ public class Battle
                     {
                         return resolution;
                     }
+                    continue;
                 }
             }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Serilog;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Gameplay;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Gameplay.Directives;
 using Shardion.Terrabreak.Features.ZannotGoodenough.Gameplay.Invocations;
@@ -21,9 +22,11 @@ public class StationaryMonster : IMonster<StationaryMonsterState>
     {
         if (invocation.Defender == thisMonster)
         {
+            Log.Debug("Defending against attack from {attackerplayer}'s {attacker}.", invocation.AttackingPlayer, invocation.Attacker);
             StationaryMonsterState state = (StationaryMonsterState)thisState;
             if (state.FortifyTurnsRemaining > 0)
             {
+                Log.Debug("{turns} Fortify turns remain, blocking.", state.FortifyTurnsRemaining);
                 return
                 [
                     new DamageDirective(
@@ -41,6 +44,7 @@ public class StationaryMonster : IMonster<StationaryMonsterState>
     public IEnumerable<IBattleDirective>? HookPlayerTurnStart(PlayerTurnStartInvocation invocation, BattleMonster thisMonster, MonsterState thisState)
     {
         StationaryMonsterState state = (StationaryMonsterState)thisState;
+        Log.Debug("Reducing Fortify turns from {now} to {new}.", state.FortifyTurnsRemaining, state.FortifyTurnsRemaining - 1);
         state.FortifyTurnsRemaining = Math.Max(0, state.FortifyTurnsRemaining - 1);
         return null;
     }
