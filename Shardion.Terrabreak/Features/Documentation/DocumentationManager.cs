@@ -12,7 +12,7 @@ namespace Shardion.Terrabreak.Features.Documentation;
 
 public class DocumentationManager : ITerrabreakFeature
 {
-    public ConcurrentDictionary<string, JsonComponent> Changelogs { get; } = [];
+    public ConcurrentDictionary<string, JsonDocument> Changelogs { get; } = [];
     public JsonComponent? UserGuide { get; set; } = null;
 
     public async Task StartAsync()
@@ -50,8 +50,8 @@ public class DocumentationManager : ITerrabreakFeature
         await Parallel.ForEachAsync(changelogDirJsonFiles, async (changelogFilename, token) =>
         {
             await using FileStream changelogStream = File.OpenRead(changelogFilename);
-            JsonComponent? loadedChangelogMessage =
-                await JsonSerializer.DeserializeAsync<JsonComponent>(changelogStream, cancellationToken: token);
+            JsonDocument? loadedChangelogMessage =
+                await JsonSerializer.DeserializeAsync<JsonDocument>(changelogStream, cancellationToken: token);
             if (loadedChangelogMessage is null)
             {
                 Log.Error($"Changelog file `{changelogFilename}` failed to deserialize. Not loading.");

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 using NetCord;
+using NetCord.JsonConverters;
 using NetCord.JsonModels;
 using NetCord.Rest;
 using NetCord.Services.ApplicationCommands;
@@ -25,26 +27,26 @@ public class DocumentationModule(DocumentationManager documentationManager, Iden
         if (targetVersion is null)
         {
             return RespondAsync(InteractionCallback.Message(new()
-                {
-                    Content = "Please specify a version!",
-                    Flags = MessageFlags.Ephemeral
-                }
+            {
+                Content = "Please specify a version!",
+                Flags = MessageFlags.Ephemeral
+            }
             ));
         }
 
-        if (documentationManager.Changelogs.GetValueOrDefault(targetVersion) is not JsonComponent changelog)
+        if (documentationManager.Changelogs.GetValueOrDefault(targetVersion) is not JsonDocument changelog)
         {
             return RespondAsync(InteractionCallback.Message(new()
-                {
-                    Content = $"No changelog exists for version `{version}`!",
-                    Flags = MessageFlags.Ephemeral
-                }
+            {
+                Content = $"No changelog exists for version `{version}`!",
+                Flags = MessageFlags.Ephemeral
+            }
             ));
         }
 
         return RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
             .WithComponents([
-                new DumbComponent(changelog)
+                new DumbComponent(changelog.RootElement)
             ])
             .WithFlags(MessageFlags.IsComponentsV2)
         ));
@@ -59,15 +61,15 @@ public class DocumentationModule(DocumentationManager documentationManager, Iden
     {
         if (documentationManager.UserGuide is not JsonComponent component)
             return RespondAsync(InteractionCallback.Message(new InteractionMessageProperties
-                {
-                    Content = $"{identity.BotName} administration has not added a user guide!",
-                    Flags = MessageFlags.Ephemeral
-                }
+            {
+                Content = $"{identity.BotName} administration has not added a user guide!",
+                Flags = MessageFlags.Ephemeral
+            }
             ));
 
         return RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
             .WithComponents([
-                new DumbComponent(component)
+
             ])
             .WithFlags(MessageFlags.IsComponentsV2)
         ));

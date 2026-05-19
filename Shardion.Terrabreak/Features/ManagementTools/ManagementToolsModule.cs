@@ -43,29 +43,6 @@ public class ManagementToolsModule(
         ));
     }
 
-    [SubSlashCommand("zannot-message", "A measure because I need to release this event now!!!")]
-    public async Task ImpersonateChangelog(
-        [SlashCommandParameter(Description = "The channel to send the message in.")]
-        TextChannel channel
-    )
-    {
-        await channel.SendMessageAsync(new MessageProperties()
-            .WithComponents([
-                new ComponentContainerProperties([
-                    new TextDisplayProperties("### The Zannot Stadium has opened!"),
-                    new TextDisplayProperties("President Zan G. Zannot's newest venture makes accessible the incredible world of monster fighting! You can be the first to invest, and you'll definitely make it big!! If you're good enough, you might even be able to defeat the President himself...?!"),
-                    new TextDisplayProperties("Run `/invest` to bring your team to the arena! Competition will be stiff, but the rewards are plentiful—bring them along next time with `/loadout` to climb even higher!"),
-                ])
-            ])
-            .WithFlags(MessageFlags.IsComponentsV2)
-        );
-
-        await RespondAsync(InteractionCallback.Message(new InteractionMessageProperties()
-            .WithContent("Message sent.")
-            .WithFlags(MessageFlags.Ephemeral)
-        ));
-    }
-
     [SubSlashCommand("import", "Import a Project Terrabreak 3.1 data dump.")]
     public async Task Import()
     {
